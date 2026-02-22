@@ -1,7 +1,6 @@
 
 // ============== INICIALIZAÇÃO E DIAGNÓSTICO ==============
 
-// Espera o DOM estar pronto antes de executar o código do jogo
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -9,31 +8,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const copyLogBtn = document.getElementById('copy-log-btn');
     const debugConsole = document.getElementById('debug-console');
 
-    // --- Função de Log para Diagnóstico ---
     function log(message) {
-        console.log(message); // Log para a consola do browser
+        console.log(message);
         const timestamp = new Date().toLocaleTimeString();
         const p = document.createElement('p');
         p.innerHTML = `<strong>${timestamp}:</strong> ${message}`;
         debugConsole.appendChild(p);
-        debugConsole.scrollTop = debugConsole.scrollHeight; // Auto-scroll
+        debugConsole.scrollTop = debugConsole.scrollHeight;
     }
 
     log('Script game.js carregado.');
 
-    // --- Botão para Copiar o Log ---
     copyLogBtn.addEventListener('click', () => {
         navigator.clipboard.writeText(debugConsole.innerText)
             .then(() => log('Log copiado para o clipboard!'))
             .catch(err => log('Erro ao copiar log: ' + err));
     });
 
-    // 1. Configuração para ecrã vertical (Mobile)
+    // ============== CONFIGURAÇÕES DO JOGO ==============
+
     const gridCols = 8;
     const gridRows = 22;
     const tileSize = 30;
 
-    // 2. Caminho que serpenteia de CIMA para BAIXO
+    // --- NOVA PERSPETIVA 2.5D (Ajuste Agressivo) ---
+    const PERSPECTIVE_WIDTH = 0.7;  // Mais estreito
+    const PERSPECTIVE_HEIGHT = 0.6; // Muito mais alto para maior profundidade
+
     const path = [
         {x: 4, y: 0}, {x: 4, y: 1}, {x: 4, y: 2},
         {x: 5, y: 2}, {x: 6, y: 2}, {x: 6, y: 3}, {x: 6, y: 4}, {x: 6, y: 5},
@@ -56,12 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.addEventListener('resize', resize);
 
+    // Função de projeção isométrica MODIFICADA
     function toIso(col, row) {
-        let isoX = (col - row) * (tileSize * 0.7);
-        let isoY = (col + row) * (tileSize * 0.35);
+        let isoX = (col - row) * (tileSize * PERSPECTIVE_WIDTH);
+        let isoY = (col + row) * (tileSize * PERSPECTIVE_HEIGHT);
         return { 
             x: isoX + canvas.width / 2, 
-            y: isoY + 50
+            y: isoY + 20 // Puxa a grelha para baixo para começar perto do fundo
         };
     }
 
@@ -78,8 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function drawTile(x, y, isPath, isPlayerSide) {
-        const tileWidthHalf = tileSize * 0.7;
-        const tileHeightHalf = tileSize * 0.35;
+        const tileWidthHalf = tileSize * PERSPECTIVE_WIDTH;
+        const tileHeightHalf = tileSize * PERSPECTIVE_HEIGHT;
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.lineTo(x + tileWidthHalf, y + tileHeightHalf);
