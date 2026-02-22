@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const MONSTERS_PER_ROUND = 5;
     const PASSIVE_GOLD_RATE = 1;
     let gold, playerHealth, monsters, towers, gameStarted;
-    let roundTime, endRoundCooldown, isRoundEnding, spawnedMonstersCount, passiveGoldCooldown;
+    let roundTime, endRoundCooldown, isRoundEnding, spawnedMonstersCount, passiveGoldCooldown, monsterSpawnCooldown;
     let playerActions, selectedAction, lastTime = 0;
 
     function generatePathFromVertices(v){/*...*/const p=[];if(v.length===0)return p;for(let i=0;i<v.length-1;i++){let s=v[i],e=v[i+1],x=s.x,y=s.y,dX=Math.sign(e.x-s.x),dY=Math.sign(e.y-s.y);while(x!==e.x||y!==e.y){p.push({x,y});if(x!==e.x)x+=dX;else if(y!==e.y)y+=dY}}p.push(v[v.length-1]);return p}
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resetGame(){
-        gameStarted=false;log('A ronda começa com a sua primeira ação.');gold=500;playerHealth=100;monsters=[];towers=[];playerActions=[];spawnedMonstersCount=0;roundTime=0;endRoundCooldown=5;isRoundEnding=false;passiveGoldCooldown=1;selectedAction=null;actionButtons.forEach(b=>b.classList.remove('selected'));updateGold(0);updateHealth(0);timerSpan.textContent="00:00";resize();drawGrid();
+        gameStarted=false;log('A ronda começa com a sua primeira ação.');gold=500;playerHealth=100;monsters=[];towers=[];playerActions=[];spawnedMonstersCount=0;roundTime=0;endRoundCooldown=5;isRoundEnding=false;passiveGoldCooldown=1;monsterSpawnCooldown=3;selectedAction=null;actionButtons.forEach(b=>b.classList.remove('selected'));updateGold(0);updateHealth(0);timerSpan.textContent="00:00";resize();drawGrid();
     }
 
     // ============== PONTO DE ENTRADA ==============
