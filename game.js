@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         debugConsole.scrollTop = debugConsole.scrollHeight;
     }
 
-    log('Script game.js carregado.');
+    log('Script game.js carregado com sistema de vértices.');
 
     copyLogBtn.addEventListener('click', () => {
         navigator.clipboard.writeText(debugConsole.innerText)
@@ -30,28 +30,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const gridCols = 15;
     const gridRows = 30;
-
     let gold = 500; // Ouro inicial
 
-    const path = [
-        {x: 4, y: 0}, {x: 4, y: 1}, {x: 6, y: 1}, {x: 7, y: 1}, {x: 8, y: 1}, {x: 4, y: 2}, 
-        {x: 6, y: 2}, {x: 8, y: 2}, {x: 4, y: 3}, {x: 5, y: 3}, {x: 6, y: 3}, {x: 8, y: 3}, 
-        {x: 8, y: 4}, {x: 8, y: 5}, {x: 9, y: 5}, {x: 10, y: 5}, {x: 11, y: 5}, {x: 12, y: 5}, 
-        {x: 13, y: 5}, {x: 2, y: 6}, {x: 3, y: 6}, {x: 4, y: 6}, {x: 5, y: 6}, {x: 6, y: 6}, 
-        {x: 13, y: 6}, {x: 2, y: 7}, {x: 6, y: 7}, {x: 13, y: 7}, {x: 2, y: 8}, {x: 6, y: 8}, 
-        {x: 13, y: 8}, {x: 2, y: 9}, {x: 6, y: 9}, {x: 7, y: 9}, {x: 8, y: 9}, {x: 9, y: 9}, 
-        {x: 10, y: 9}, {x: 11, y: 9}, {x: 12, y: 9}, {x: 13, y: 9}, {x: 2, y: 10}, {x: 2, y: 11}, 
-        {x: 2, y: 12}, {x: 2, y: 13}, {x: 3, y: 13}, {x: 4, y: 13}, {x: 5, y: 13}, {x: 6, y: 13}, 
-        {x: 7, y: 13}, {x: 7, y: 14}, {x: 7, y: 15}, {x: 7, y: 16}, {x: 8, y: 16}, {x: 9, y: 16}, 
-        {x: 10, y: 16}, {x: 11, y: 16}, {x: 12, y: 16}, {x: 12, y: 17}, {x: 12, y: 18}, {x: 12, y: 19}, 
-        {x: 2, y: 20}, {x: 3, y: 20}, {x: 4, y: 20}, {x: 5, y: 20}, {x: 6, y: 20}, {x: 7, y: 20}, 
-        {x: 8, y: 20}, {x: 9, y: 20}, {x: 12, y: 20}, {x: 2, y: 21}, {x: 9, y: 21}, {x: 12, y: 21}, 
-        {x: 2, y: 22}, {x: 9, y: 22}, {x: 12, y: 22}, {x: 2, y: 23}, {x: 9, y: 23}, {x: 10, y: 23}, 
-        {x: 11, y: 23}, {x: 12, y: 23}, {x: 2, y: 24}, {x: 3, y: 24}, {x: 4, y: 24}, {x: 5, y: 24}, 
-        {x: 6, y: 24}, {x: 7, y: 24}, {x: 7, y: 25}, {x: 3, y: 26}, {x: 4, y: 26}, {x: 5, y: 26}, 
-        {x: 7, y: 26}, {x: 3, y: 27}, {x: 5, y: 27}, {x: 7, y: 27}, {x: 3, y: 28}, {x: 5, y: 28}, 
-        {x: 6, y: 28}, {x: 7, y: 28}, {x: 3, y: 29}
+    /**
+     * Gera um caminho contínuo a partir de uma lista de vértices (esquinas).
+     * @param {Array<Object>} vertices - Uma lista de pontos {x, y}.
+     * @returns {Array<Object>} O caminho completo com todos os pontos intermédios.
+     */
+    function generatePathFromVertices(vertices) {
+        const fullPath = [];
+        if (vertices.length === 0) return fullPath;
+
+        for (let i = 0; i < vertices.length - 1; i++) {
+            const start = vertices[i];
+            const end = vertices[i + 1];
+
+            let x = start.x;
+            let y = start.y;
+
+            // Assumimos que os segmentos são apenas horizontais ou verticais
+            const dx = Math.sign(end.x - start.x);
+            const dy = Math.sign(end.y - start.y);
+
+            while (x !== end.x || y !== end.y) {
+                fullPath.push({ x, y });
+                if (x !== end.x) {
+                    x += dx;
+                } else if (y !== end.y) {
+                    y += dy;
+                }
+            }
+        }
+        // Adiciona o último vértice ao caminho
+        fullPath.push(vertices[vertices.length - 1]);
+        return fullPath;
+    }
+
+    const vertices = [
+        {x: 4, y: 0}, {x: 4, y: 3}, {x: 6, y: 3}, {x: 6, y: 1}, {x: 8, y: 1}, 
+        {x: 8, y: 5}, {x: 13, y: 5}, {x: 13, y: 9}, {x: 6, y: 9}, {x: 6, y: 6}, 
+        {x: 2, y: 6}, {x: 2, y: 13}, {x: 7, y: 13}, {x: 7, y: 16}, {x: 12, y: 16}, 
+        {x: 12, y: 23}, {x: 9, y: 23}, {x: 9, y: 20}, {x: 2, y: 20}, {x: 2, y: 24}, 
+        {x: 7, y: 24}, {x: 7, y: 28}, {x: 5, y: 28}, {x: 5, y: 26}, {x: 3, y: 26}, 
+        {x: 3, y: 29}
     ];
+
+    const path = generatePathFromVertices(vertices);
 
     function updateGold(amount) {
         gold += amount;
@@ -71,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Função de projeção de perspetiva de 1 ponto
     function project(col, row) {
-        const PERSPECTIVE_STRENGTH = 0.3; // REDUZIDO de 0.7 para 0.3 para uma vista mais de cima
+        const PERSPECTIVE_STRENGTH = 0.3;
         const Y_TOP = 100;
         const Y_BOTTOM = canvas.height - 50;
         const TOTAL_Y_SPAN = Y_BOTTOM - Y_TOP;
@@ -124,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Converte coordenadas do ecrã para a nova grelha
     function screenToGrid(screenX, screenY) {
-        const PERSPECTIVE_STRENGTH = 0.3; // REDUZIDO de 0.7 para 0.3 para uma vista mais de cima
+        const PERSPECTIVE_STRENGTH = 0.3; 
         const Y_TOP = 100;
         const Y_BOTTOM = canvas.height - 50;
         const TOTAL_Y_SPAN = Y_BOTTOM - Y_TOP;
