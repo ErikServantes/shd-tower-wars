@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Função de projeção de perspetiva de 1 ponto
     function project(col, row) {
-        const PERSPECTIVE_STRENGTH = 0.7; 
+        const PERSPECTIVE_STRENGTH = 0.3; // REDUZIDO de 0.7 para 0.3 para uma vista mais de cima
         const Y_TOP = 100;
         const Y_BOTTOM = canvas.height - 50;
         const TOTAL_Y_SPAN = Y_BOTTOM - Y_TOP;
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Converte coordenadas do ecrã para a nova grelha
     function screenToGrid(screenX, screenY) {
-        const PERSPECTIVE_STRENGTH = 0.7;
+        const PERSPECTIVE_STRENGTH = 0.3; // REDUZIDO de 0.7 para 0.3 para uma vista mais de cima
         const Y_TOP = 100;
         const Y_BOTTOM = canvas.height - 50;
         const TOTAL_Y_SPAN = Y_BOTTOM - Y_TOP;
