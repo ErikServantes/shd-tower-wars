@@ -91,7 +91,8 @@ function drawTile(x, y, isPath, isPlayerSide) {
     if (isPath) {
         ctx.fillStyle = "#2c3e50";
     } else {
-        ctx.fillStyle = isPlayerSide ? "#27ae6022" : "#c0392b22"; 
+        // A opacidade foi aumentada de 22 para 88
+        ctx.fillStyle = isPlayerSide ? "#27ae6088" : "#c0392b88"; 
     }
 
     ctx.strokeStyle = "rgba(255,255,255,0.1)";
