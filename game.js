@@ -10,16 +10,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const hpSpan = document.getElementById('hp');
     const timerSpan = document.getElementById('timer');
 
-    function log(message) { /* ... log implementation ... */ }
-    log('Script game.js carregado com renda passiva de ouro.');
+    function log(message) {
+        console.log(message);
+        const timestamp = new Date().toLocaleTimeString();
+        const p = document.createElement('p');
+        // Use innerText para prevenir injeção de HTML, exceto para mensagens seguras
+        p.innerHTML = `<strong>${timestamp}:</strong> ${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}`;
+        debugConsole.appendChild(p);
+        debugConsole.scrollTop = debugConsole.scrollHeight;
+    }
+    log('Script game.js carregado com sistema de gravação de ações (Ghost).');
 
     // ============== CONFIGURAÇÕES DO JOGO ==============
     const gridCols = 15, gridRows = 30;
     const MONSTERS_PER_ROUND = 5;
-    const PASSIVE_GOLD_RATE = 1; // 1 de ouro por segundo
+    const PASSIVE_GOLD_RATE = 1;
 
     let gold, playerHealth, monsters, towers, gameStarted;
     let roundTime, endRoundCooldown, isRoundEnding, spawnedMonstersCount, passiveGoldCooldown;
+    let playerActions; // Array para gravar as ações do jogador
 
     function generatePathFromVertices(v){const p=[];if(v.length===0)return p;for(let i=0;i<v.length-1;i++){let s=v[i],e=v[i+1],x=s.x,y=s.y,dX=Math.sign(e.x-s.x),dY=Math.sign(e.y-s.y);while(x!==e.x||y!==e.y){p.push({x,y});if(x!==e.x)x+=dX;else if(y!==e.y)y+=dY}}p.push(v[v.length-1]);return p}
     const vertices=[{x:4,y:0},{x:4,y:3},{x:6,y:3},{x:6,y:1},{x:8,y:1},{x:8,y:5},{x:13,y:5},{x:13,y:9},{x:6,y:9},{x:6,y:6},{x:2,y:6},{x:2,y:13},{x:7,y:13},{x:7,y:16},{x:12,y:16},{x:12,y:23},{x:9,y:23},{x:9,y:20},{x:2,y:20},{x:2,y:24},{x:7,y:24},{x:7,y:28},{x:5,y:28},{x:5,y:26},{x:3,y:26},{x:3,y:29}];
@@ -36,7 +45,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     class Monster{constructor(){this.pathIndex=0;const s=path[0],c=getTileCenter(s.x,s.y);this.x=c.x;this.y=c.y;this.speed=80;this.radius=8;this.maxHealth=100;this.health=this.maxHealth;this.reachedEnd=false;}takeDamage(a){this.health-=a;}move(dT){if(this.pathIndex>=path.length-1){this.reachedEnd=true;return;}const tN=path[this.pathIndex+1],tC=getTileCenter(tN.x,tN.y),dX=tC.x-this.x,dY=tC.y-this.y,dist=Math.sqrt(dX*dX+dY*dY),mD=this.speed*dT;if(dist<mD){this.pathIndex++;this.x=tC.x;this.y=tC.y;}else{this.x+=(dX/dist)*mD;this.y+=(dY/dist)*mD;}}draw(){ctx.beginPath();ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);ctx.fillStyle='red';ctx.fill();const hW=20,hP=this.health/this.maxHealth;ctx.fillStyle='#ff0000';ctx.fillRect(this.x-hW/2,this.y-this.radius-10,hW,5);ctx.fillStyle='#00ff00';ctx.fillRect(this.x-hW/2,this.y-this.radius-10,hW*hP,5);}}
     class Tower{constructor(c,r){const C=getTileCenter(c,r);this.x=C.x;this.y=C.y;this.col=c;this.row=r;this.range=150;this.damage=10;this.fireRate=1;this.fireCooldown=0;this.target=null;}draw(){ctx.fillStyle="#0000ff";ctx.beginPath();ctx.arc(this.x,this.y-5,10,0,Math.PI*2);ctx.fill();}findTarget(m){this.target=null;let cD=this.range+1;for(const M of m){const d=Math.sqrt(Math.pow(this.x-M.x,2)+Math.pow(this.y-M.y,2));if(d<cD){cD=d;this.target=M;}}}attack(dT){this.fireCooldown-=dT;if(this.fireCooldown<=0&&this.target&&this.target.health>0){this.target.takeDamage(this.damage);this.fireCooldown=1/this.fireRate;}}}
-    canvas.addEventListener('click', (e) => { if(!gameStarted)return;const r=canvas.getBoundingClientRect(),cX=e.clientX-r.left,cY=e.clientY-r.top;const{col,row}=screenToGrid(cX,cY);const T_C=100;if(col<0||col>=gridCols||row<0||row>=gridRows-1)return;const iPS=row>=gridRows/2,iP=path.some(p=>p.x===col&&p.y===row),iO=towers.some(t=>t.col===col&&t.row===row);if(!iPS)return;if(iP)return;if(iO)return;if(gold<T_C)return;updateGold(-T_C);towers.push(new Tower(col,row)); });
+    
+    // ============== LÓGICA DE CONSTRUÇÃO E GRAVAÇÃO ==============
+    canvas.addEventListener('click', (e) => { 
+        if(!gameStarted) return;
+        const rect = canvas.getBoundingClientRect(), clickX = e.clientX - rect.left, clickY = e.clientY - rect.top;
+        const {col,row} = screenToGrid(clickX,clickY);
+        const TOWER_COST = 100;
+        if(col<0||col>=gridCols||row<0||row>=gridRows-1 || !isPlayerSide(row) || isPath(col,row) || isOccupied(col,row) || gold < TOWER_COST) return;
+
+        updateGold(-TOWER_COST);
+        towers.push(new Tower(col,row));
+        
+        // Grava a ação de construção
+        const action = { action: 'build', type: 'default_tower', col, row, timestamp: roundTime };
+        playerActions.push(action);
+        log(`Ação gravada: ${JSON.stringify(action)}`);
+    });
+    function isPlayerSide(r){return r>=gridRows/2}
+    function isPath(c,r){return path.some(p=>p.x===c&&p.y===r)}
+    function isOccupied(c,r){return towers.some(t=>t.col===c&&t.row===r)}
 
     // ============== CICLO DE JOGO (GAMELOOP) ==============
     let lastTime = 0, monsterSpawnCooldown = 3;
@@ -44,28 +72,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function gameLoop(timestamp) {
         if (!gameStarted) return;
         const deltaTime = (timestamp - lastTime) / 1000;
-        lastTime = timestamp;
-        roundTime += deltaTime;
+        lastTime = timestamp; roundTime += deltaTime;
 
-        // --- GERAÇÃO DE OURO PASSIVO ---
         passiveGoldCooldown -= deltaTime;
-        if (passiveGoldCooldown <= 0) {
-            updateGold(1);
-            passiveGoldCooldown = 1; // Reinicia o contador para 1 segundo
-        }
+        if (passiveGoldCooldown <= 0) { updateGold(PASSIVE_GOLD_RATE); passiveGoldCooldown = 1; }
 
-        // Spawning de monstros
         monsterSpawnCooldown -= deltaTime;
         if (monsterSpawnCooldown <= 0 && spawnedMonstersCount < MONSTERS_PER_ROUND) {
-            monsters.push(new Monster());
-            spawnedMonstersCount++;
-            monsterSpawnCooldown = 3; 
+            monsters.push(new Monster()); spawnedMonstersCount++; monsterSpawnCooldown = 3; 
         }
 
-        // Lógica de Fim de Ronda
         if (spawnedMonstersCount >= MONSTERS_PER_ROUND && monsters.length === 0 && !isRoundEnding) {
             isRoundEnding = true;
-            log(`Todos os ${MONSTERS_PER_ROUND} monstros derrotados. A ronda termina em ${Math.ceil(endRoundCooldown)}s...`);
+            log(`Ronda termina em ${Math.ceil(endRoundCooldown)}s...`);
         }
         if (isRoundEnding) {
             endRoundCooldown -= deltaTime;
@@ -75,16 +94,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Atualizações
         monsters.forEach(m => m.move(deltaTime));
         towers.forEach(t => { t.findTarget(monsters); t.attack(deltaTime); });
-        
-        // Limpeza e Lógica de Jogo
         const monstersAtEnd = monsters.filter(m => m.reachedEnd);
         if (monstersAtEnd.length > 0) { updateHealth(-10 * monstersAtEnd.length); }
         monsters = monsters.filter(m => m.health > 0 && !m.reachedEnd);
 
-        // Desenho e HUD
         drawGrid();
         towers.forEach(t => t.draw());
         monsters.forEach(m => m.draw());
@@ -97,9 +112,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function endGame(isVictory) {
+        if (!gameStarted) return;
         gameStarted = false;
         const message = isVictory ? "RONDA CONCLUÍDA!" : "FIM DE JOGO";
         log(message);
+        
+        // Log do Ghost gravado
+        if (playerActions.length > 0) {
+            log('--- Gravação da Ronda (Ghost) ---');
+            log(`<pre>${JSON.stringify(playerActions, null, 2)}</pre>`);
+        }
+
         ctx.fillStyle = "rgba(0,0,0,0.7)"; ctx.fillRect(0,0,canvas.width,canvas.height);
         ctx.fillStyle = "white"; ctx.font = "40px sans-serif"; ctx.textAlign = "center";
         ctx.fillText(message, canvas.width/2, canvas.height/2);
@@ -107,22 +130,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initGame() {
-        gameStarted = true;
-        startButton.style.display = 'none';
-        log('O jogo começou!');
+        gameStarted = true; startButton.style.display = 'none'; log('O jogo começou!');
         lastTime = performance.now();
-
-        // Resetar estado do jogo
-        gold = 500; playerHealth = 100; monsters = []; towers = [];
+        gold = 500; playerHealth = 100; monsters = []; towers = []; playerActions = [];
         spawnedMonstersCount = 0; roundTime = 0; endRoundCooldown = 5; isRoundEnding = false;
-        passiveGoldCooldown = 1; // Inicia o contador de ouro
-
+        passiveGoldCooldown = 1;
         updateGold(0); updateHealth(0); timerSpan.textContent = "00:00";
         requestAnimationFrame(gameLoop);
     }
 
     startButton.addEventListener('click', initGame);
-    
     log('DOM pronto. A aguardar início do jogo.');
     resize();
     goldSpan.textContent = 500; hpSpan.textContent = 100; timerSpan.textContent = "00:00";
