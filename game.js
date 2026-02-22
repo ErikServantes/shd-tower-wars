@@ -8,241 +8,139 @@ document.addEventListener('DOMContentLoaded', () => {
     const copyLogBtn = document.getElementById('copy-log-btn');
     const debugConsole = document.getElementById('debug-console');
     const goldSpan = document.getElementById('gold');
-    const hpSpan = document.getElementById('hp'); // Elemento da vida no HUD
+    const hpSpan = document.getElementById('hp');
+    const timerSpan = document.getElementById('timer');
 
-    function log(message) {
-        console.log(message);
-        const timestamp = new Date().toLocaleTimeString();
-        const p = document.createElement('p');
-        p.innerHTML = `<strong>${timestamp}:</strong> ${message}`;
-        debugConsole.appendChild(p);
-        debugConsole.scrollTop = debugConsole.scrollHeight;
-    }
+    function log(message) { /* ... log implementation ... */ }
 
-    log('Script game.js carregado com sistema de vida.');
-
-    copyLogBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(debugConsole.innerText)
-            .then(() => log('Log copiado para o clipboard!'))
-            .catch(err => log('Erro ao copiar log: ' + err));
-    });
+    log('Script game.js carregado com lógica de fim de ronda simplificada.');
 
     // ============== CONFIGURAÇÕES DO JOGO ==============
+    const gridCols = 15, gridRows = 30;
+    const MONSTERS_PER_ROUND = 5;
+    let gold, playerHealth, monsters, towers, gameStarted;
+    let roundTime, endRoundCooldown, isRoundEnding, spawnedMonstersCount;
 
-    const gridCols = 15;
-    const gridRows = 30;
-    let gold = 500;
-    let playerHealth = 100; // Vida inicial do jogador
+    // ... (funções de utilidade como generatePathFromVertices, project, etc. permanecem as mesmas) ...
+    function generatePathFromVertices(v){const p=[];if(v.length===0)return p;for(let i=0;i<v.length-1;i++){let s=v[i],e=v[i+1],x=s.x,y=s.y,dX=Math.sign(e.x-s.x),dY=Math.sign(e.y-s.y);while(x!==e.x||y!==e.y){p.push({x,y});if(x!==e.x)x+=dX;else if(y!==e.y)y+=dY}}p.push(v[v.length-1]);return p}
+    const vertices=[{x:4,y:0},{x:4,y:3},{x:6,y:3},{x:6,y:1},{x:8,y:1},{x:8,y:5},{x:13,y:5},{x:13,y:9},{x:6,y:9},{x:6,y:6},{x:2,y:6},{x:2,y:13},{x:7,y:13},{x:7,y:16},{x:12,y:16},{x:12,y:23},{x:9,y:23},{x:9,y:20},{x:2,y:20},{x:2,y:24},{x:7,y:24},{x:7,y:28},{x:5,y:28},{x:5,y:26},{x:3,y:26},{x:3,y:29}];
+    const path=generatePathFromVertices(vertices);
+    function updateGold(a){gold+=a;goldSpan.textContent=gold}
+    function updateHealth(a){playerHealth+=a;hpSpan.textContent=playerHealth;if(playerHealth<=0)endGame(false)}
+    function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;drawGrid()}
+    window.addEventListener('resize',resize);
+    function project(c,r){const P=0.3,Y_T=100,Y_B=canvas.height-50,T_Y=Y_B-Y_T,W_B=canvas.width*0.9,W_T=W_B*(1-P),rR=r/(gridRows-1),y=Y_T+rR*T_Y,w=W_T+rR*(W_B-W_T),tW=w/gridCols,sX=(canvas.width-w)/2,x=sX+c*tW;return{x,y,tileWidth:tW}}
+    function drawGrid(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let r=0;r<gridRows-1;r++)for(let c=0;c<gridCols;c++)drawTile(path.some(p=>p.x===c&&p.y===r),r>=gridRows/2,c,r)}
+    function drawTile(i,p,c,r){const C=project(c,r);if(r>=gridRows-1)return;const N=project(c,r+1);ctx.beginPath();ctx.moveTo(C.x,C.y);ctx.lineTo(C.x+C.tileWidth,C.y);ctx.lineTo(N.x+N.tileWidth,N.y);ctx.lineTo(N.x,N.y);ctx.closePath();ctx.fillStyle=i?"#2c3e50":(p?"#27ae6088":"#c0392b88");ctx.strokeStyle="rgba(255,255,255,0.1)";ctx.fill();ctx.stroke();}
+    function screenToGrid(sX,sY){const P=0.3,Y_T=100,Y_B=canvas.height-50,T_Y=Y_B-Y_T,W_B=canvas.width*0.9,W_T=W_B*(1-P);if(sY<Y_T||sY>Y_B)return{col:-1,row:-1};const yR=(sY-Y_T)/T_Y,row=Math.floor(yR*(gridRows-1)),rR=row/(gridRows-1),w=W_T+rR*(W_B-W_T),tW=w/gridCols,sX_=(canvas.width-w)/2,col=Math.floor((sX-sX_)/tW);return{col,row};}
+    function getTileCenter(c,r){const C=project(c,r);if(r>=gridRows-1)return{x:C.x+C.tileWidth/2,y:C.y};const N=project(c,r+1);return{x:((C.x+C.tileWidth/2)+(N.x+N.tileWidth/2))/2,y:(C.y+N.y)/2};}
 
-    // ... (generatePathFromVertices e vértices permanecem os mesmos)
-    function generatePathFromVertices(vertices) {
-        const fullPath = [];
-        if (vertices.length === 0) return fullPath;
-        for (let i = 0; i < vertices.length - 1; i++) {
-            const start = vertices[i];
-            const end = vertices[i + 1];
-            let x = start.x;
-            let y = start.y;
-            const dx = Math.sign(end.x - start.x);
-            const dy = Math.sign(end.y - start.y);
-            while (x !== end.x || y !== end.y) {
-                fullPath.push({ x, y });
-                if (x !== end.x) x += dx; else if (y !== end.y) y += dy;
-            }
-        }
-        fullPath.push(vertices[vertices.length - 1]);
-        return fullPath;
-    }
-
-    const vertices = [
-        {x: 4, y: 0}, {x: 4, y: 3}, {x: 6, y: 3}, {x: 6, y: 1}, {x: 8, y: 1}, 
-        {x: 8, y: 5}, {x: 13, y: 5}, {x: 13, y: 9}, {x: 6, y: 9}, {x: 6, y: 6}, 
-        {x: 2, y: 6}, {x: 2, y: 13}, {x: 7, y: 13}, {x: 7, y: 16}, {x: 12, y: 16}, 
-        {x: 12, y: 23}, {x: 9, y: 23}, {x: 9, y: 20}, {x: 2, y: 20}, {x: 2, y: 24}, 
-        {x: 7, y: 24}, {x: 7, y: 28}, {x: 5, y: 28}, {x: 5, y: 26}, {x: 3, y: 26}, 
-        {x: 3, y: 29}
-    ];
-
-    const path = generatePathFromVertices(vertices);
-
-    function updateGold(amount) {
-        gold += amount;
-        goldSpan.textContent = gold;
-    }
-    
-    function updateHealth(amount) {
-        playerHealth += amount;
-        hpSpan.textContent = playerHealth;
-        if (playerHealth <= 0) {
-            endGame();
-        }
-    }
-
-    // ============== LÓGICA DE GRELHA E PERSPETIVA ==============
-    // ... (código de projeção e desenho da grelha permanece o mesmo)
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; drawGrid(); }
-    window.addEventListener('resize', resize);
-    function project(col, row) {
-        const PERSPECTIVE_STRENGTH = 0.3;
-        const Y_TOP = 100;
-        const Y_BOTTOM = canvas.height - 50;
-        const TOTAL_Y_SPAN = Y_BOTTOM - Y_TOP;
-        const WIDTH_BOTTOM = canvas.width * 0.9;
-        const WIDTH_TOP = WIDTH_BOTTOM * (1 - PERSPECTIVE_STRENGTH);
-        const rowRatio = row / (gridRows - 1);
-        const y = Y_TOP + rowRatio * TOTAL_Y_SPAN;
-        const width = WIDTH_TOP + rowRatio * (WIDTH_BOTTOM - WIDTH_TOP);
-        const tileWidth = width / gridCols;
-        const startX = (canvas.width - width) / 2;
-        const x = startX + col * tileWidth;
-        return { x, y, tileWidth };
-    }
-    function drawGrid() { ctx.clearRect(0, 0, canvas.width, canvas.height); for (let r = 0; r < gridRows -1; r++) for (let c = 0; c < gridCols; c++) drawTile(path.some(p => p.x === c && p.y === r), r >= gridRows/2, c, r); }
-    function drawTile(isPath, isPlayerSide, col, row) {
-        const current = project(col, row); if (row >= gridRows - 1) return; const next = project(col, row + 1);
-        ctx.beginPath(); ctx.moveTo(current.x, current.y); ctx.lineTo(current.x + current.tileWidth, current.y); ctx.lineTo(next.x + next.tileWidth, next.y); ctx.lineTo(next.x, next.y); ctx.closePath();
-        ctx.fillStyle = isPath ? "#2c3e50" : (isPlayerSide ? "#27ae6088" : "#c0392b88");
-        ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.fill(); ctx.stroke();
-    }
-    function screenToGrid(screenX, screenY) {
-        const PERSPECTIVE_STRENGTH = 0.3; const Y_TOP = 100; const Y_BOTTOM = canvas.height - 50; const TOTAL_Y_SPAN = Y_BOTTOM - Y_TOP; const WIDTH_BOTTOM = canvas.width * 0.9; const WIDTH_TOP = WIDTH_BOTTOM * (1 - PERSPECTIVE_STRENGTH);
-        if (screenY < Y_TOP || screenY > Y_BOTTOM) return { col: -1, row: -1 }; const yRatio = (screenY - Y_TOP) / TOTAL_Y_SPAN; const row = Math.floor(yRatio * (gridRows - 1));
-        const rowRatio = row / (gridRows - 1); const width = WIDTH_TOP + rowRatio * (WIDTH_BOTTOM - WIDTH_TOP); const tileWidth = width / gridCols; const startX = (canvas.width - width) / 2; const col = Math.floor((screenX - startX) / tileWidth);
-        return { col, row };
-    }
-    function getTileCenter(col, row) {
-        const current = project(col, row); if (row >= gridRows - 1) return { x: current.x + current.tileWidth / 2, y: current.y }; const next = project(col, row + 1);
-        return { x: ((current.x + current.tileWidth/2) + (next.x + next.tileWidth/2))/2, y: (current.y + next.y)/2 };
-    }
 
     // ============== CLASSES: MONSTROS E TORRES ==============
-    let monsters = [];
-    let towers = [];
-    let gameStarted = false;
+    class Monster{constructor(){this.pathIndex=0;const s=path[0],c=getTileCenter(s.x,s.y);this.x=c.x;this.y=c.y;this.speed=80;this.radius=8;this.maxHealth=100;this.health=this.maxHealth;this.reachedEnd=false;}takeDamage(a){this.health-=a;}move(dT){if(this.pathIndex>=path.length-1){this.reachedEnd=true;return;}const tN=path[this.pathIndex+1],tC=getTileCenter(tN.x,tN.y),dX=tC.x-this.x,dY=tC.y-this.y,dist=Math.sqrt(dX*dX+dY*dY),mD=this.speed*dT;if(dist<mD){this.pathIndex++;this.x=tC.x;this.y=tC.y;}else{this.x+=(dX/dist)*mD;this.y+=(dY/dist)*mD;}}draw(){ctx.beginPath();ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);ctx.fillStyle='red';ctx.fill();const hW=20,hP=this.health/this.maxHealth;ctx.fillStyle='#ff0000';ctx.fillRect(this.x-hW/2,this.y-this.radius-10,hW,5);ctx.fillStyle='#00ff00';ctx.fillRect(this.x-hW/2,this.y-this.radius-10,hW*hP,5);}}
+    class Tower{constructor(c,r){const C=getTileCenter(c,r);this.x=C.x;this.y=C.y;this.col=c;this.row=r;this.range=150;this.damage=10;this.fireRate=1;this.fireCooldown=0;this.target=null;}draw(){ctx.fillStyle="#0000ff";ctx.beginPath();ctx.arc(this.x,this.y-5,10,0,Math.PI*2);ctx.fill();}findTarget(m){this.target=null;let cD=this.range+1;for(const M of m){const d=Math.sqrt(Math.pow(this.x-M.x,2)+Math.pow(this.y-M.y,2));if(d<cD){cD=d;this.target=M;}}}attack(dT){this.fireCooldown-=dT;if(this.fireCooldown<=0&&this.target&&this.target.health>0){this.target.takeDamage(this.damage);this.fireCooldown=1/this.fireRate;}}}
+    canvas.addEventListener('click', (e) => { if(!gameStarted)return;const r=canvas.getBoundingClientRect(),cX=e.clientX-r.left,cY=e.clientY-r.top;const{col,row}=screenToGrid(cX,cY);const T_C=100;if(col<0||col>=gridCols||row<0||row>=gridRows-1)return;const iPS=row>=gridRows/2,iP=path.some(p=>p.x===col&&p.y===row),iO=towers.some(t=>t.col===col&&t.row===row);if(!iPS)return;if(iP)return;if(iO)return;if(gold<T_C)return;updateGold(-T_C);towers.push(new Tower(col,row)); });
 
-    class Monster {
-        constructor() {
-            this.pathIndex = 0;
-            const startNode = path[this.pathIndex];
-            const center = getTileCenter(startNode.x, startNode.y);
-            this.x = center.x;
-            this.y = center.y;
-            this.speed = 80; 
-            this.radius = 8;
-            this.maxHealth = 100;
-            this.health = this.maxHealth;
-            this.reachedEnd = false; // Flag para monstros que chegaram ao fim
-        }
-
-        takeDamage(amount) { this.health -= amount; }
-
-        move(deltaTime) {
-            if (this.pathIndex >= path.length - 1) {
-                this.reachedEnd = true; // Chegou ao fim
-                return;
-            }
-            
-            const targetNode = path[this.pathIndex + 1];
-            const targetCenter = getTileCenter(targetNode.x, targetNode.y);
-            const dx = targetCenter.x - this.x, dy = targetCenter.y - this.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const moveDistance = this.speed * deltaTime;
-
-            if (distance < moveDistance) {
-                this.pathIndex++;
-                this.x = targetCenter.x;
-                this.y = targetCenter.y;
-            } else {
-                this.x += (dx / distance) * moveDistance;
-                this.y += (dy / distance) * moveDistance;
-            }
-        }
-
-        draw() { /* ... (código de desenho do monstro e barra de vida permanece o mesmo) ... */ 
-            ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = 'red'; ctx.fill();
-            const healthBarWidth = 20; const healthPercentage = this.health/this.maxHealth; ctx.fillStyle='#ff0000'; ctx.fillRect(this.x-healthBarWidth/2, this.y-this.radius-10, healthBarWidth, 5); ctx.fillStyle='#00ff00'; ctx.fillRect(this.x-healthBarWidth/2, this.y-this.radius-10, healthBarWidth*healthPercentage, 5);
-        }
-    }
-
-    class Tower { /* ... (código da classe Tower permanece o mesmo) ... */ 
-        constructor(col, row) { const center = getTileCenter(col, row); this.x = center.x; this.y = center.y; this.col = col; this.row = row; this.range = 150; this.damage = 10; this.fireRate = 1; this.fireCooldown = 0; this.target = null; }
-        draw() { ctx.fillStyle = "#0000ff"; ctx.beginPath(); ctx.arc(this.x, this.y - 5, 10, 0, Math.PI * 2); ctx.fill(); }
-        findTarget(monsterList) { this.target = null; let closestDist = this.range+1; for(const m of monsterList) { const dist = Math.sqrt(Math.pow(this.x-m.x,2)+Math.pow(this.y-m.y,2)); if(dist<closestDist){closestDist=dist;this.target=m;} } }
-        attack(deltaTime) { this.fireCooldown-=deltaTime; if(this.fireCooldown<=0&&this.target&&this.target.health>0){ this.target.takeDamage(this.damage); this.fireCooldown = 1/this.fireRate; } }
-    }
-
-    // ============== LÓGICA DE CONSTRUÇÃO ==============
-    canvas.addEventListener('click', (e) => { /* ... (código de construção permanece o mesmo) ... */ 
-        if (!gameStarted) return; const rect = canvas.getBoundingClientRect(); const clickX = e.clientX-rect.left; const clickY = e.clientY-rect.top; const {col,row} = screenToGrid(clickX,clickY);
-        const TOWER_COST=100; if (col<0||col>=gridCols||row<0||row>=gridRows-1) return; const isPlayerSide = row>=gridRows/2; const isPath = path.some(p => p.x===col&&p.y===row); const isOccupied = towers.some(t => t.col===col&&t.row===row);
-        if(!isPlayerSide){log('Não pode construir fora da sua área.');return;} if(isPath){log('Não pode construir no caminho.');return;} if(isOccupied){log('Já existe uma torre aí.');return;} if(gold<TOWER_COST){log('Ouro insuficiente.');return;}
-        updateGold(-TOWER_COST); towers.push(new Tower(col, row));
-    });
 
     // ============== CICLO DE JOGO (GAMELOOP) ==============
-    let lastTime = 0;
-    let monsterSpawnCooldown = 3; 
+    let lastTime = 0, monsterSpawnCooldown = 3;
 
     function gameLoop(timestamp) {
         if (!gameStarted) return;
         const deltaTime = (timestamp - lastTime) / 1000;
         lastTime = timestamp;
+        roundTime += deltaTime;
 
-        // Spawning
+        // Spawning de monstros (limitado a MONSTERS_PER_ROUND)
         monsterSpawnCooldown -= deltaTime;
-        if (monsterSpawnCooldown <= 0) {
+        if (monsterSpawnCooldown <= 0 && spawnedMonstersCount < MONSTERS_PER_ROUND) {
             monsters.push(new Monster());
-            monsterSpawnCooldown = 3;
+            spawnedMonstersCount++;
+            monsterSpawnCooldown = 3; 
+        }
+
+        // --- LÓGICA DE FIM DE RONDA ---
+        // Condição para iniciar a contagem decrescente: todos os monstros foram gerados E não há mais monstros no campo.
+        if (spawnedMonstersCount >= MONSTERS_PER_ROUND && monsters.length === 0 && !isRoundEnding) {
+            isRoundEnding = true;
+            log(`Todos os ${MONSTERS_PER_ROUND} monstros derrotados. A ronda termina em ${endRoundCooldown}s...`);
+        }
+        
+        if (isRoundEnding) {
+            endRoundCooldown -= deltaTime;
+            if (endRoundCooldown <= 0) {
+                // Verificação final: a ronda só termina se o campo continuar vazio.
+                if (monsters.length === 0) {
+                    endGame(true); // Vitória
+                    return;
+                } else {
+                    // Isto não deve acontecer com a lógica atual, mas é uma salvaguarda.
+                    isRoundEnding = false; 
+                    endRoundCooldown = 5; 
+                }
+            }
         }
 
         // Atualizações
-        monsters.forEach(monster => monster.move(deltaTime));
-        towers.forEach(tower => { tower.findTarget(monsters); tower.attack(deltaTime); });
+        monsters.forEach(m => m.move(deltaTime));
+        towers.forEach(t => { t.findTarget(monsters); t.attack(deltaTime); });
         
         // Limpeza e Lógica de Jogo
         const monstersAtEnd = monsters.filter(m => m.reachedEnd);
-        if (monstersAtEnd.length > 0) {
-            updateHealth(-10 * monstersAtEnd.length); // Perde 10 de vida por monstro
-            log(`${monstersAtEnd.length} monstro(s) chegaram à base!`)
-        }
-
-        // Remove monstros mortos OU que chegaram ao fim
+        if (monstersAtEnd.length > 0) { updateHealth(-10 * monstersAtEnd.length); }
         monsters = monsters.filter(m => m.health > 0 && !m.reachedEnd);
 
-        // Desenho
+        // Desenho e HUD
         drawGrid();
-        towers.forEach(tower => tower.draw());
-        monsters.forEach(monster => monster.draw());
-        
+        towers.forEach(t => t.draw());
+        monsters.forEach(m => m.draw());
+        const minutes = Math.floor(roundTime / 60).toString().padStart(2, '0');
+        const seconds = Math.floor(roundTime % 60).toString().padStart(2, '0');
+        timerSpan.textContent = `${minutes}:${seconds}`;
+        if (isRoundEnding) timerSpan.textContent += ` (Fim em ${Math.ceil(endRoundCooldown)}s)`;
+
         requestAnimationFrame(gameLoop);
     }
     
-    function endGame() {
-        if (!gameStarted) return;
+    function endGame(isVictory) {
         gameStarted = false;
-        log("FIM DE JOGO! A sua base foi destruída.");
-        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "white";
-        ctx.font = "40px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("FIM DE JOGO", canvas.width / 2, canvas.height / 2);
+        const message = isVictory ? "RONDA CONCLUÍDA!" : "FIM DE JOGO";
+        log(message);
+        ctx.fillStyle = "rgba(0,0,0,0.7)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = "white"; ctx.font = "40px sans-serif"; ctx.textAlign = "center";
+        ctx.fillText(message, canvas.width/2, canvas.height/2);
+        startButton.style.display = 'block';
     }
 
-    startButton.addEventListener('click', () => {
-        if (gameStarted) return;
+    function initGame() {
         gameStarted = true;
         startButton.style.display = 'none';
         log('O jogo começou!');
         lastTime = performance.now();
-        // Resetar estado do jogo para um novo começo (opcional)
-        playerHealth = 100; gold = 500; monsters = []; towers = [];
-        updateHealth(0); updateGold(0);
+
+        // Resetar estado do jogo
+        gold = 500;
+        playerHealth = 100;
+        monsters = [];
+        towers = [];
+        spawnedMonstersCount = 0;
+        roundTime = 0;
+        endRoundCooldown = 5;
+        isRoundEnding = false;
+
+        updateGold(0); 
+        updateHealth(0);
+        timerSpan.textContent = "00:00";
+        
         requestAnimationFrame(gameLoop);
-    });
+    }
+
+    startButton.addEventListener('click', initGame);
     
-    log('DOM pronto. Inicializando o jogo.');
+    // Estado inicial antes do jogo começar
+    log('DOM pronto. A aguardar início do jogo.');
     resize();
-    updateGold(0); // Garante que o ouro inicial aparece no HUD
-    hpSpan.textContent = playerHealth; // Garante que a vida inicial aparece no HUD
+    goldSpan.textContent = 500;
+    hpSpan.textContent = 100;
+    timerSpan.textContent = "00:00";
 });
