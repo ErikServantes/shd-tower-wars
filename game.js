@@ -12,16 +12,27 @@ document.addEventListener('DOMContentLoaded', () => {
     function log(message) { /* ... log implementation ... */ }
     log('Jogo em modo de início dinâmico.');
 
+    // ============== CONFIGURAÇÃO DO FIREBASE ==============
+    const firebaseConfig = {
+        apiKey: "AIzaSyBx_hQ59G_leo48xZRQh6XFQZci8lIKYwM",
+        authDomain: "shd-towerwars.firebaseapp.com",
+        projectId: "shd-towerwars",
+        storageBucket: "shd-towerwars.firebasestorage.app",
+        messagingSenderId: "251334988662",
+        appId: "1:251334988662:web:51fc38287cbf45f485e057",
+        measurementId: "G-Z3EDB6BC3G"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    log("Firebase conectado. Pronto para guardar Ghosts.");
+
     // ============== CONFIGURAÇÕES E ESTADO DO JOGO ==============
     const gridCols = 15, gridRows = 30;
     const MONSTERS_PER_ROUND = 5;
     const PASSIVE_GOLD_RATE = 1;
-
     let gold, playerHealth, monsters, towers, gameStarted;
     let roundTime, endRoundCooldown, isRoundEnding, spawnedMonstersCount, passiveGoldCooldown;
-    let playerActions; 
-    let selectedAction = null;
-    let lastTime = 0;
+    let playerActions, selectedAction, lastTime = 0;
 
     function generatePathFromVertices(v){/*...*/const p=[];if(v.length===0)return p;for(let i=0;i<v.length-1;i++){let s=v[i],e=v[i+1],x=s.x,y=s.y,dX=Math.sign(e.x-s.x),dY=Math.sign(e.y-s.y);while(x!==e.x||y!==e.y){p.push({x,y});if(x!==e.x)x+=dX;else if(y!==e.y)y+=dY}}p.push(v[v.length-1]);return p}
     const vertices=[{x:4,y:0},{x:4,y:3},{x:6,y:3},{x:6,y:1},{x:8,y:1},{x:8,y:5},{x:13,y:5},{x:13,y:9},{x:6,y:9},{x:6,y:6},{x:2,y:6},{x:2,y:13},{x:7,y:13},{x:7,y:16},{x:12,y:16},{x:12,y:23},{x:9,y:23},{x:9,y:20},{x:2,y:20},{x:2,y:24},{x:7,y:24},{x:7,y:28},{x:5,y:28},{x:5,y:26},{x:3,y:26},{x:3,y:29}];
@@ -63,47 +74,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleCanvasClick(e) {
         if (!selectedAction || selectedAction.type !== 'tower') return;
-        const rect = canvas.getBoundingClientRect(), cX=e.clientX-rect.left, cY=e.clientY-rect.top;
+        const rect=canvas.getBoundingClientRect(),cX=e.clientX-rect.left,cY=e.clientY-rect.top;
         const {col,row} = screenToGrid(cX,cY);
-        const TOWER_COST = 100, canBuild = col>=0&&row>=gridRows/2&&!path.some(p=>p.x===col&&p.y===row)&&!towers.some(t=>t.col===col&&t.row===row)&&gold>=TOWER_COST;
+        const TOWER_COST=100,canBuild=col>=0&&row>=gridRows/2&&!path.some(p=>p.x===col&&p.y===row)&&!towers.some(t=>t.col===col&&t.row===row)&&gold>=TOWER_COST;
+        if(canBuild){startGameIfNeeded();updateGold(-TOWER_COST);towers.push(new Tower(col,row));const action={action:'build',type:selectedAction.unit,col,row,timestamp:roundTime};playerActions.push(action);log(`Torre construída em (${col},${row}).`);document.querySelector('.action-btn.selected')?.classList.remove('selected');selectedAction=null;}else{log("Construção inválida.");}}
 
-        if (canBuild) {
-            startGameIfNeeded();
-            updateGold(-TOWER_COST);
-            towers.push(new Tower(col,row));
-            const action = { action: 'build', type: selectedAction.unit, col, row, timestamp: roundTime };
-            playerActions.push(action);
-            log(`Torre construída em (${col},${row}).`);
-            document.querySelector('.action-btn.selected')?.classList.remove('selected');
-            selectedAction = null;
-        } else {
-            log("Construção inválida.");
+    // ============== CICLO, ESTADO E GHOSTS ==============
+    function startGameIfNeeded(){if(gameStarted)return;gameStarted=true;lastTime=performance.now();log('A ronda começou!');requestAnimationFrame(gameLoop);}
+    function gameLoop(t){if(!gameStarted)return;const dT=(t-lastTime)/1000;lastTime=t;roundTime+=dT;passiveGoldCooldown-=dT;if(passiveGoldCooldown<=0){updateGold(PASSIVE_GOLD_RATE);passiveGoldCooldown=1;}monsterSpawnCooldown-=dT;if(monsterSpawnCooldown<=0&&spawnedMonstersCount<MONSTERS_PER_ROUND){monsters.push(new Monster());spawnedMonstersCount++;monsterSpawnCooldown=3;}if(spawnedMonstersCount>=MONSTERS_PER_ROUND&&monsters.length===0&&!isRoundEnding){isRoundEnding=true;log(`Ronda termina em ${Math.ceil(endRoundCooldown)}s...`);}if(isRoundEnding){endRoundCooldown-=dT;if(endRoundCooldown<=0){if(monsters.length===0){endGame(true);return;}else{isRoundEnding=false;endRoundCooldown=5;}}}monsters.forEach(m=>m.move(dT));towers.forEach(t=>{t.findTarget(monsters);t.attack(dT);});const mAE=monsters.filter(m=>m.reachedEnd);if(mAE.length>0){updateHealth(-10*mAE.length);}monsters=monsters.filter(m=>m.health>0&&!m.reachedEnd);drawGrid();towers.forEach(t=>t.draw());monsters.forEach(m=>m.draw());const min=Math.floor(roundTime/60).toString().padStart(2,'0'),sec=Math.floor(roundTime%60).toString().padStart(2,'0');timerSpan.textContent=`${min}:${sec}`;if(isRoundEnding)timerSpan.textContent+=` (Fim em ${Math.ceil(endRoundCooldown)}s)`;requestAnimationFrame(gameLoop);}
+    
+    async function saveGhost(actions) {
+        if (!actions || actions.length === 0) return;
+        try {
+            const ghostData = {
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                actions: actions,
+                duration: roundTime,
+            };
+            const docRef = await db.collection("ghosts").add(ghostData);
+            log(`Ghost guardado com sucesso! ID: ${docRef.id}`);
+        } catch (error) {
+            console.error("Erro ao guardar o Ghost: ", error);
+            log("Falha ao guardar o Ghost no servidor.");
         }
     }
 
-    // ============== CICLO E ESTADO DE JOGO ==============
-    function startGameIfNeeded() {
-        if (gameStarted) return;
-        gameStarted = true;
-        lastTime = performance.now();
-        log('A ronda começou!');
-        requestAnimationFrame(gameLoop);
+    function endGame(isVictory) { 
+        if(!gameStarted)return;
+        gameStarted = false;
+        const message = isVictory ? "RONDA CONCLUÍDA!" : "FIM DE JOGO";
+        log(message);
+
+        if (isVictory) {
+            log('--- Gravação da Ronda (Ghost) ---');
+            log(`<pre>${JSON.stringify(playerActions, null, 2)}</pre>`);
+            saveGhost(playerActions);
+        }
+
+        ctx.fillStyle="rgba(0,0,0,0.7)";ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle="white";ctx.font="40px sans-serif";ctx.textAlign="center";
+        ctx.fillText(message,canvas.width/2,canvas.height/2);
+        log("Recarregue a página para jogar novamente."); 
     }
 
-    function gameLoop(t){if(!gameStarted)return;const dT=(t-lastTime)/1000;lastTime=t;roundTime+=dT;passiveGoldCooldown-=dT;if(passiveGoldCooldown<=0){updateGold(PASSIVE_GOLD_RATE);passiveGoldCooldown=1;}monsterSpawnCooldown-=dT;if(monsterSpawnCooldown<=0&&spawnedMonstersCount<MONSTERS_PER_ROUND){monsters.push(new Monster());spawnedMonstersCount++;monsterSpawnCooldown=3;}if(spawnedMonstersCount>=MONSTERS_PER_ROUND&&monsters.length===0&&!isRoundEnding){isRoundEnding=true;log(`Ronda termina em ${Math.ceil(endRoundCooldown)}s...`);}if(isRoundEnding){endRoundCooldown-=dT;if(endRoundCooldown<=0){if(monsters.length===0){endGame(true);return;}else{isRoundEnding=false;endRoundCooldown=5;}}}monsters.forEach(m=>m.move(dT));towers.forEach(t=>{t.findTarget(monsters);t.attack(dT);});const mAE=monsters.filter(m=>m.reachedEnd);if(mAE.length>0){updateHealth(-10*mAE.length);}monsters=monsters.filter(m=>m.health>0&&!m.reachedEnd);drawGrid();towers.forEach(t=>t.draw());monsters.forEach(m=>m.draw());const min=Math.floor(roundTime/60).toString().padStart(2,'0'),sec=Math.floor(roundTime%60).toString().padStart(2,'0');timerSpan.textContent=`${min}:${sec}`;if(isRoundEnding)timerSpan.textContent+=` (Fim em ${Math.ceil(endRoundCooldown)}s)`;requestAnimationFrame(gameLoop);}
-    
-    function endGame(v) { if(!gameStarted)return;gameStarted=false;const m=v?"RONDA CONCLUÍDA!":"FIM DE JOGO";log(m);if(playerActions.length>0){log('--- Gravação da Ronda (Ghost) ---');log(`<pre>${JSON.stringify(playerActions,null,2)}</pre>`);}ctx.fillStyle="rgba(0,0,0,0.7)";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle="white";ctx.font="40px sans-serif";ctx.textAlign="center";ctx.fillText(m,canvas.width/2,canvas.height/2);log("Recarregue a página para jogar novamente."); }
-
-    function resetGame() {
-        gameStarted = false;
-        log('A ronda começa com a sua primeira ação.');
-        gold = 500; playerHealth = 100; monsters = []; towers = []; playerActions = [];
-        spawnedMonstersCount = 0; roundTime = 0; endRoundCooldown = 5; isRoundEnding = false;
-        passiveGoldCooldown = 1; selectedAction = null;
-        actionButtons.forEach(b => b.classList.remove('selected'));
-        updateGold(0); updateHealth(0); timerSpan.textContent = "00:00";
-        resize();
-        drawGrid(); // Desenha a grelha inicial
+    function resetGame(){
+        gameStarted=false;log('A ronda começa com a sua primeira ação.');gold=500;playerHealth=100;monsters=[];towers=[];playerActions=[];spawnedMonstersCount=0;roundTime=0;endRoundCooldown=5;isRoundEnding=false;passiveGoldCooldown=1;selectedAction=null;actionButtons.forEach(b=>b.classList.remove('selected'));updateGold(0);updateHealth(0);timerSpan.textContent="00:00";resize();drawGrid();
     }
 
     // ============== PONTO DE ENTRADA ==============
