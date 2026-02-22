@@ -6,18 +6,18 @@ ESTADO ATUAL DO PROJETO:
 [x] Repositório GitHub criado e sincronizado.
 [x] Estrutura básica de ficheiros (index.html, style.css, game.js).
 [x] Configuração inicial do Firebase Firestore e Hosting.
-[ ] Motor Isométrico funcional.
+[x] Motor Isométrico funcional.
 [ ] Lógica de Rondas e Spawning.
 
 ================================================================
 FASE 1: INFRAESTRUTURA E MOTOR VISUAL (CORE)
 ================================================================
-Status: [EM PROGRESSO]
+Status: [CONCLUÍDO]
 
-[ ] 1.1 - Refinar Grade Isométrica: Implementar conversão de coordenadas (2D to Iso) com suporte a zoom/pan para mobile.
-[ ] 1.2 - Desenho do Caminho: Implementar o caminho em "S" vertical triplo baseado em array de coordenadas.
-[ ] 1.3 - Divisão de Campo: Visualizar a linha de demarcação (Equador) entre a zona do Jogador e a zona do Ghost.
-[ ] 1.4 - Responsividade: Garantir que o canvas se ajusta a diferentes rácios de ecrã (Portrait).
+[x] 1.1 - Refinar Grade Isométrica: Implementar conversão de coordenadas (2D to Iso) com suporte a zoom/pan para mobile.
+[x] 1.2 - Desenho do Caminho: Implementar o caminho em "S" vertical triplo baseado em array de coordenadas.
+[x] 1.3 - Divisão de Campo: Visualizar a linha de demarcação (Equador) entre a zona do Jogador e a zona do Ghost.
+[x] 1.4 - Responsividade: Garantir que o canvas se ajusta a diferentes rácios de ecrã (Portrait).
 
 ================================================================
 FASE 2: ENTIDADES E MOVIMENTO

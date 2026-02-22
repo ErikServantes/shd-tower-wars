@@ -22,10 +22,18 @@ const ctx = canvas.getContext('2d');
 
 // Configurações do Mapa
 const gridSize = 12; // 12x12 tiles
-const tileSize = 40; // Tamanho de cada quadrado
+const baseTileSize = 40; // Tamanho base de cada quadrado
+
+// Controlo de Câmera (Zoom/Pan)
+let scale = 1.0;
+let offsetX = 0;
+let offsetY = 0;
+let isDragging = false;
+let lastMouseX = 0;
+let lastMouseY = 0;
+
 
 // Caminho em "S" (Coordenadas da grade x, y)
-// Este caminho atravessa o mapa de cima a baixo
 const path = [
     {x: 5, y: 0}, {x: 5, y: 1}, {x: 5, y: 2}, 
     {x: 6, y: 2}, {x: 7, y: 2}, {x: 8, y: 2}, {x: 9, y: 2},
@@ -43,14 +51,16 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// A MÁGICA: Converte Grade 2D em Isométrico
+// A MÁGICA: Converte Grade 2D em Isométrico com Zoom e Pan
 function toIso(x, y) {
-    let isoX = (x - y) * (tileSize * 0.8);
-    let isoY = (x + y) * (tileSize * 0.4);
-    // Centraliza no ecrã
+    const scaledTileSize = baseTileSize * scale;
+    let isoX = (x - y) * (scaledTileSize * 0.8);
+    let isoY = (x + y) * (scaledTileSize * 0.4);
+    
+    // Centraliza e aplica o Pan
     return { 
-        x: isoX + canvas.width / 2, 
-        y: isoY + canvas.height / 6 
+        x: isoX + canvas.width / 2 + offsetX, 
+        y: isoY + canvas.height / 6 + offsetY 
     };
 }
 
@@ -70,17 +80,16 @@ function drawGrid() {
 }
 
 function drawTile(x, y, isPath, isPlayerSide) {
+    const scaledTileSize = baseTileSize * scale;
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.lineTo(x + tileSize, y + tileSize * 0.5);
-    ctx.lineTo(x, y + tileSize);
-    ctx.lineTo(x - tileSize, y + tileSize * 0.5);
+    ctx.lineTo(x + scaledTileSize, y + scaledTileSize * 0.5);
+    ctx.lineTo(x, y + scaledTileSize);
+    ctx.lineTo(x - scaledTileSize, y + scaledTileSize * 0.5);
     ctx.closePath();
 
-    // Cores: Caminho é azulado, Relva/Chão é cinza
-    // Metade do jogador tem um tom ligeiramente diferente
     if (isPath) {
-        ctx.fillStyle = "#2c3e50"; // Cor do caminho
+        ctx.fillStyle = "#2c3e50";
     } else {
         ctx.fillStyle = isPlayerSide ? "#27ae6022" : "#c0392b22"; 
     }
@@ -90,8 +99,62 @@ function drawTile(x, y, isPath, isPlayerSide) {
     ctx.stroke();
 }
 
+// === HANDLERS DE EVENTOS PARA ZOOM E PAN ===
+
+// Zoom com a roda do rato
+function handleWheel(event) {
+    event.preventDefault();
+    const scaleAmount = 0.1;
+    if (event.deltaY < 0) {
+        scale += scaleAmount; // Zoom in
+    } else {
+        scale -= scaleAmount; // Zoom out
+    }
+    // Limita a escala
+    scale = Math.max(0.5, Math.min(scale, 2.5));
+}
+
+// Pan (arrastar) com o rato ou toque
+function handleMouseDown(event) {
+    isDragging = true;
+    lastMouseX = event.clientX || event.touches[0].clientX;
+    lastMouseY = event.clientY || event.touches[0].clientY;
+}
+
+function handleMouseUp() {
+    isDragging = false;
+}
+
+function handleMouseMove(event) {
+    if (!isDragging) return;
+    const clientX = event.clientX || event.touches[0].clientX;
+    const clientY = event.clientY || event.touches[0].clientY;
+    
+    const deltaX = clientX - lastMouseX;
+    const deltaY = clientY - lastMouseY;
+    
+    offsetX += deltaX;
+    offsetY += deltaY;
+    
+    lastMouseX = clientX;
+    lastMouseY = clientY;
+}
+
+// Adicionar os event listeners
+canvas.addEventListener('wheel', handleWheel);
+canvas.addEventListener('mousedown', handleMouseDown);
+canvas.addEventListener('mouseup', handleMouseUp);
+canvas.addEventListener('mouseleave', handleMouseUp); // Para quando o rato sai do canvas
+canvas.addEventListener('mousemove', handleMouseMove);
+
+// Para mobile (toque)
+canvas.addEventListener('touchstart', handleMouseDown);
+canvas.addEventListener('touchend', handleMouseUp);
+canvas.addEventListener('touchmove', handleMouseMove);
+
+
 function gameLoop() {
-    drawGrid();
+    drawGrid(); // A nossa grelha agora é dinâmica!
     requestAnimationFrame(gameLoop);
 }
 
