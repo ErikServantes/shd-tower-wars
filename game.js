@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;if(gameStarted)drawGrid();}
     window.addEventListener('resize',resize);
     function project(c,r){const P=0.3,Y_T=100,Y_B=canvas.height-50,T_Y=Y_B-Y_T,W_B=canvas.width*0.9,W_T=W_B*(1-P),rR=r/(gridRows-1),y=Y_T+rR*T_Y,w=W_T+rR*(W_B-W_T),tW=w/gridCols,sX=(canvas.width-w)/2,x=sX+c*tW;return{x,y,tileWidth:tW}}
-    function drawGrid(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let r=0;r<gridRows-1;r++)for(let c=0;c<gridCols;c++)drawTile(path.some(p=>p.x===c&&p.y===r),r>=gridRows/2,c,r)}
+    function drawGrid(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let r=0;r<gridRows-1;r++)for(let c=0;c<gridCols;c++)drawTile(path.some(p=>p.x===c&&p.y===r),r>=14,c,r)}
     function drawTile(i,p,c,r){/*...*/const C=project(c,r);if(r>=gridRows-1)return;const N=project(c,r+1);ctx.beginPath();ctx.moveTo(C.x,C.y);ctx.lineTo(C.x+C.tileWidth,C.y);ctx.lineTo(N.x+N.tileWidth,N.y);ctx.lineTo(N.x,N.y);ctx.closePath();ctx.fillStyle=i?"#2c3e50":(p?"#27ae6088":"#c0392b88");ctx.strokeStyle="rgba(255,255,255,0.1)";ctx.fill();ctx.stroke();}
     function screenToGrid(sX,sY){const P=0.3,Y_T=100,Y_B=canvas.height-50,T_Y=Y_B-Y_T,W_B=canvas.width*0.9,W_T=W_B*(1-P);if(sY<Y_T||sY>Y_B)return{col:-1,row:-1};const yR=(sY-Y_T)/T_Y,row=Math.floor(yR*(gridRows-1)),rR=row/(gridRows-1),w=W_T+rR*(W_B-W_T),tW=w/gridCols,sX_=(canvas.width-w)/2,col=Math.floor((sX-sX_)/tW);return{col,row};}
     function getTileCenter(c,r){const C=project(c,r);if(r>=gridRows-1)return{x:C.x+C.tileWidth/2,y:C.y};const N=project(c,r+1);return{x:((C.x+C.tileWidth/2)+(N.x+N.tileWidth/2))/2,y:(C.y+N.y)/2};}
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!selectedAction || selectedAction.type !== 'tower') return;
         const rect=canvas.getBoundingClientRect(),cX=e.clientX-rect.left,cY=e.clientY-rect.top;
         const {col,row} = screenToGrid(cX,cY);
-        const TOWER_COST=100,canBuild=col>=0&&row>=gridRows/2&&!path.some(p=>p.x===col&&p.y===row)&&!towers.some(t=>t.col===col&&t.row===row)&&gold>=TOWER_COST;
+        const TOWER_COST=100,canBuild=col>=0&&row>=14&&!path.some(p=>p.x===col&&p.y===row)&&!towers.some(t=>t.col===col&&t.row===row)&&gold>=TOWER_COST;
         if(canBuild){startGameIfNeeded();updateGold(-TOWER_COST);towers.push(new Tower(col,row));const action={action:'build',type:selectedAction.unit,col,row,timestamp:roundTime};playerActions.push(action);log(`Torre construída em (${col},${row}).`);document.querySelector('.action-btn.selected')?.classList.remove('selected');selectedAction=null;}else{log("Construção inválida.");}}
 
     // ============== CICLO, ESTADO E GHOSTS ==============
