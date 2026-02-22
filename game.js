@@ -1,49 +1,29 @@
-// Importar as bibliotecas do Firebase
-// import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-// import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-// CONFIGURAÇÃO DO FIREBASE (Temporariamente desativado para focar no motor de jogo)
-/*
-const firebaseConfig = {
-    apiKey: "AQU_VAI_A_TUA_CHAVE",
-    authDomain: "teu-projeto.firebaseapp.com",
-    projectId: "teu-projeto",
-    storageBucket: "teu-projeto.appspot.com",
-    messagingSenderId: "0000000000",
-    appId: "1:0000000000:web:00000000"
-};
-
-// Inicializar Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-console.log("Firebase ligado com sucesso!");
-*/
+// Firebase foi comentado anteriormente para evitar erros de inicialização
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// Configurações do Mapa
-const gridSize = 12; // 12x12 tiles
-const baseTileSize = 40; // Tamanho base de cada quadrado
+// 1. Configuração para ecrã vertical (Mobile)
+const gridCols = 8;  // Mais estreito
+const gridRows = 22; // Mais comprido
+const tileSize = 30; // Ajusta conforme o ecrã
 
-// Controlo de Câmera (Zoom/Pan)
-let scale = 1.0;
-let offsetX = 0;
-let offsetY = 0;
-let isDragging = false;
-let lastMouseX = 0;
-let lastMouseY = 0;
-
-
-// Caminho em "S" (Coordenadas da grade x, y)
+// 2. Caminho que serpenteia de CIMA para BAIXO
 const path = [
-    {x: 5, y: 0}, {x: 5, y: 1}, {x: 5, y: 2}, 
-    {x: 6, y: 2}, {x: 7, y: 2}, {x: 8, y: 2}, {x: 9, y: 2},
-    {x: 9, y: 3}, {x: 9, y: 4}, {x: 9, y: 5},
-    {x: 8, y: 5}, {x: 7, y: 5}, {x: 6, y: 5}, {x: 5, y: 5}, {x: 4, y: 5}, {x: 3, y: 5},
-    {x: 3, y: 6}, {x: 3, y: 7}, {x: 3, y: 8},
-    {x: 4, y: 8}, {x: 5, y: 8}, {x: 6, y: 8}, {x: 7, y: 8},
-    {x: 7, y: 9}, {x: 7, y: 10}, {x: 7, y: 11}
+    // Topo (Base Inimiga)
+    {x: 4, y: 0}, {x: 4, y: 1}, {x: 4, y: 2},
+    // Primeira curva (S para a direita)
+    {x: 5, y: 2}, {x: 6, y: 2}, {x: 6, y: 3}, {x: 6, y: 4}, {x: 6, y: 5},
+    // Segunda curva (S para a esquerda)
+    {x: 5, y: 5}, {x: 4, y: 5}, {x: 3, y: 5}, {x: 2, y: 5}, {x: 1, y: 5},
+    {x: 1, y: 6}, {x: 1, y: 7}, {x: 1, y: 8}, {x: 1, y: 9},
+    // Terceira curva (Volta ao centro/direita)
+    {x: 2, y: 9}, {x: 3, y: 9}, {x: 4, y: 9}, {x: 5, y: 9}, {x: 6, y: 9},
+    {x: 6, y: 10}, {x: 6, y: 11}, {x: 6, y: 12}, // ATRAVESSA O MEIO
+    {x: 5, y: 12}, {x: 4, y: 12}, {x: 3, y: 12},
+    {x: 3, y: 13}, {x: 3, y: 14}, {x: 3, y: 15},
+    {x: 4, y: 15}, {x: 5, y: 15}, {x: 5, y: 16}, {x: 5, y: 17}, {x: 5, y: 18},
+    {x: 4, y: 18}, {x: 4, y: 19}, {x: 4, y: 20}, {x: 4, y: 21} // Fundo (Tua Base)
 ];
 
 function resize() {
@@ -53,47 +33,48 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// A MÁGICA: Converte Grade 2D em Isométrico com Zoom e Pan
-function toIso(x, y) {
-    const scaledTileSize = baseTileSize * scale;
-    let isoX = (x - y) * (scaledTileSize * 0.8);
-    let isoY = (x + y) * (scaledTileSize * 0.4);
+// 3. Conversão "Suave" (Ângulo menos pronunciado)
+function toIso(col, row) {
+    // Reduzimos o multiplicador horizontal para o mapa não sair do ecrã
+    // Aumentamos o peso do 'row' no Y para esticar verticalmente
+    let isoX = (col - row) * (tileSize * 0.7);
+    let isoY = (col + row) * (tileSize * 0.35); 
     
-    // Centraliza e aplica o Pan
+    // Centralização dinâmica
     return { 
-        x: isoX + canvas.width / 2 + offsetX, 
-        y: isoY + canvas.height / 6 + offsetY 
+        x: isoX + canvas.width / 2, 
+        y: isoY + 50 // Margem pequena no topo
     };
 }
 
+// 4. Desenho atualizado
 function drawGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    for (let x = 0; x < gridSize; x++) {
-        for (let y = 0; y < gridSize; y++) {
-            const pos = toIso(x, y);
+    
+    for (let r = 0; r < gridRows; r++) {
+        for (let c = 0; c < gridCols; c++) {
+            const pos = toIso(c, r);
+            const isPath = path.some(p => p.x === c && p.y === r);
+            // A linha divisória está na linha 11 (meio de 22)
+            const isPlayerSide = r >= gridRows / 2; 
             
-            // Verifica se este tile faz parte do caminho
-            const isPath = path.some(p => p.x === x && p.y === y);
-            
-            drawTile(pos.x, pos.y, isPath, x >= gridSize / 2);
+            drawTile(pos.x, pos.y, isPath, isPlayerSide);
         }
     }
 }
 
 function drawTile(x, y, isPath, isPlayerSide) {
-    const scaledTileSize = baseTileSize * scale;
+    const scaledTileSize = tileSize; // Não precisamos mais de `scale`
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.lineTo(x + scaledTileSize, y + scaledTileSize * 0.5);
-    ctx.lineTo(x, y + scaledTileSize);
-    ctx.lineTo(x - scaledTileSize, y + scaledTileSize * 0.5);
+    ctx.lineTo(x + scaledTileSize * 0.7 * 2, y + scaledTileSize * 0.35 * 2 * 0.5);
+    ctx.lineTo(x, y + scaledTileSize * 0.35 * 2);
+    ctx.lineTo(x - scaledTileSize * 0.7 * 2, y + scaledTileSize * 0.35 * 2 * 0.5);
     ctx.closePath();
 
     if (isPath) {
-        ctx.fillStyle = "#2c3e50";
+        ctx.fillStyle = "#2c3e50"; // Cor do caminho
     } else {
-        // A opacidade foi aumentada de 22 para 88
         ctx.fillStyle = isPlayerSide ? "#27ae6088" : "#c0392b88"; 
     }
 
@@ -102,62 +83,8 @@ function drawTile(x, y, isPath, isPlayerSide) {
     ctx.stroke();
 }
 
-// === HANDLERS DE EVENTOS PARA ZOOM E PAN ===
-
-// Zoom com a roda do rato
-function handleWheel(event) {
-    event.preventDefault();
-    const scaleAmount = 0.1;
-    if (event.deltaY < 0) {
-        scale += scaleAmount; // Zoom in
-    } else {
-        scale -= scaleAmount; // Zoom out
-    }
-    // Limita a escala
-    scale = Math.max(0.5, Math.min(scale, 2.5));
-}
-
-// Pan (arrastar) com o rato ou toque
-function handleMouseDown(event) {
-    isDragging = true;
-    lastMouseX = event.clientX || event.touches[0].clientX;
-    lastMouseY = event.clientY || event.touches[0].clientY;
-}
-
-function handleMouseUp() {
-    isDragging = false;
-}
-
-function handleMouseMove(event) {
-    if (!isDragging) return;
-    const clientX = event.clientX || event.touches[0].clientX;
-    const clientY = event.clientY || event.touches[0].clientY;
-    
-    const deltaX = clientX - lastMouseX;
-    const deltaY = clientY - lastMouseY;
-    
-    offsetX += deltaX;
-    offsetY += deltaY;
-    
-    lastMouseX = clientX;
-    lastMouseY = clientY;
-}
-
-// Adicionar os event listeners
-canvas.addEventListener('wheel', handleWheel);
-canvas.addEventListener('mousedown', handleMouseDown);
-canvas.addEventListener('mouseup', handleMouseUp);
-canvas.addEventListener('mouseleave', handleMouseUp); // Para quando o rato sai do canvas
-canvas.addEventListener('mousemove', handleMouseMove);
-
-// Para mobile (toque)
-canvas.addEventListener('touchstart', handleMouseDown);
-canvas.addEventListener('touchend', handleMouseUp);
-canvas.addEventListener('touchmove', handleMouseMove);
-
-
 function gameLoop() {
-    drawGrid(); // A nossa grelha agora é dinâmica!
+    drawGrid();
     requestAnimationFrame(gameLoop);
 }
 
