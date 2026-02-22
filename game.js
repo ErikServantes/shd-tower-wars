@@ -30,12 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const gridCols = 8;
     const gridRows = 22;
-    const tileSize = 30;
-    
-    // Fatores da nova projeção oblíqua
-    const TILE_WIDTH = tileSize * 1.5;
-    const TILE_HEIGHT = tileSize * 0.7;
-    const SHEAR_FACTOR = 0.5; // Fator de inclinação para o efeito 3D
 
     let gold = 500; // Ouro inicial
 
@@ -57,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         goldSpan.textContent = gold;
     }
 
-    // ============== LÓGICA DE GRELHA E PERSPETIVA (OBLÍQUA) ==============
+    // ============== LÓGICA DE GRELHA E PERSPETIVA (1 PONTO) ==============
 
     function resize() {
         log('Redimensionando o canvas...');
@@ -68,40 +62,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.addEventListener('resize', resize);
 
-    // Função de projeção OBLÍQUA para alinhar a grelha verticalmente
-    function toIso(col, row) {
-        const shearAmount = TILE_WIDTH * SHEAR_FACTOR;
-        const screenX = col * TILE_WIDTH - row * shearAmount;
-        const screenY = row * TILE_HEIGHT;
+    // Função de projeção de perspetiva de 1 ponto
+    function project(col, row) {
+        const PERSPECTIVE_STRENGTH = 0.7; 
+        const Y_TOP = 100;
+        const Y_BOTTOM = canvas.height - 50;
+        const TOTAL_Y_SPAN = Y_BOTTOM - Y_TOP;
+        const WIDTH_BOTTOM = canvas.width * 0.9;
+        const WIDTH_TOP = WIDTH_BOTTOM * (1 - PERSPECTIVE_STRENGTH);
 
-        // Centraliza a grelha
-        const totalGridWidth = (gridCols - 1) * TILE_WIDTH;
-        const offsetX = (canvas.width - totalGridWidth) / 2;
+        const rowRatio = row / (gridRows - 1);
+        const y = Y_TOP + rowRatio * TOTAL_Y_SPAN;
+        const width = WIDTH_TOP + rowRatio * (WIDTH_BOTTOM - WIDTH_TOP);
+        const tileWidth = width / gridCols;
+        const startX = (canvas.width - width) / 2;
+        const x = startX + col * tileWidth;
 
-        return { x: screenX + offsetX, y: screenY + 100 };
+        return { x, y, tileWidth };
     }
 
     function drawGrid() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let row = 0; row < gridRows; row++) {
+        for (let row = 0; row < gridRows -1; row++) {
             for (let col = 0; col < gridCols; col++) {
-                const { x, y } = toIso(col, row);
                 const isPath = path.some(p => p.x === col && p.y === row);
                 const isPlayerSide = row >= gridRows / 2;
-                drawTile(x, y, isPath, isPlayerSide);
+                drawTile(isPath, isPlayerSide, col, row);
             }
         }
     }
 
-    // Desenha um tile como um paralelogramo para a projeção oblíqua
-    function drawTile(x, y, isPath, isPlayerSide) {
-        const shearAmount = TILE_WIDTH * SHEAR_FACTOR;
-        
+    // Desenha um tile como um trapézio para a nova projeção
+    function drawTile(isPath, isPlayerSide, col, row) {
+        const current = project(col, row);
+        if (row >= gridRows - 1) return;
+        const next = project(col, row + 1);
+
         ctx.beginPath();
-        ctx.moveTo(x, y); // Canto superior esquerdo
-        ctx.lineTo(x + TILE_WIDTH, y); // Canto superior direito
-        ctx.lineTo(x + TILE_WIDTH - shearAmount, y + TILE_HEIGHT); // Canto inferior direito
-        ctx.lineTo(x - shearAmount, y + TILE_HEIGHT); // Canto inferior esquerdo
+        ctx.moveTo(current.x, current.y); // top-left
+        ctx.lineTo(current.x + current.tileWidth, current.y); // top-right
+        ctx.lineTo(next.x + next.tileWidth, next.y); // bottom-right
+        ctx.lineTo(next.x, next.y); // bottom-left
         ctx.closePath();
 
         if (isPath) {
@@ -114,20 +115,37 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.stroke();
     }
 
-    // Converte coordenadas do ecrã para a nova grelha oblíqua
+    // Converte coordenadas do ecrã para a nova grelha
     function screenToGrid(screenX, screenY) {
-        const shearAmount = TILE_WIDTH * SHEAR_FACTOR;
-        
-        const totalGridWidth = (gridCols-1) * TILE_WIDTH;
-        const offsetX = (canvas.width - totalGridWidth) / 2;
-        const relativeX = screenX - offsetX;
-        const relativeY = screenY - 100;
+        const PERSPECTIVE_STRENGTH = 0.7;
+        const Y_TOP = 100;
+        const Y_BOTTOM = canvas.height - 50;
+        const TOTAL_Y_SPAN = Y_BOTTOM - Y_TOP;
+        const WIDTH_BOTTOM = canvas.width * 0.9;
+        const WIDTH_TOP = WIDTH_BOTTOM * (1 - PERSPECTIVE_STRENGTH);
 
-        // Inverte a fórmula de projeção
-        const row = Math.round(relativeY / TILE_HEIGHT);
-        const col = Math.round((relativeX + row * shearAmount) / TILE_WIDTH);
+        if (screenY < Y_TOP || screenY > Y_BOTTOM) return { col: -1, row: -1 };
+        const yRatio = (screenY - Y_TOP) / TOTAL_Y_SPAN;
+        const row = Math.floor(yRatio * (gridRows - 1));
+
+        const rowRatio = row / (gridRows - 1);
+        const width = WIDTH_TOP + rowRatio * (WIDTH_BOTTOM - WIDTH_TOP);
+        const tileWidth = width / gridCols;
+        const startX = (canvas.width - width) / 2;
+        const col = Math.floor((screenX - startX) / tileWidth);
 
         return { col, row };
+    }
+
+    function getTileCenter(col, row) {
+        const current = project(col, row);
+        if (row >= gridRows - 1) {
+           return { x: current.x + current.tileWidth / 2, y: current.y };
+        }
+        const next = project(col, row + 1);
+        const midX = ((current.x + current.tileWidth / 2) + (next.x + next.tileWidth / 2)) / 2;
+        const midY = (current.y + next.y) / 2;
+        return { x: midX, y: midY };
     }
 
     // ============== CLASSES: MONSTROS E TORRES ==============
@@ -139,11 +157,10 @@ document.addEventListener('DOMContentLoaded', () => {
         constructor() {
             this.pathIndex = 0;
             const startNode = path[this.pathIndex];
-            const startPos = toIso(startNode.x, startNode.y);
-            // Posiciona o monstro no centro do tile
-            this.x = startPos.x + (TILE_WIDTH / 2) - (TILE_WIDTH * SHEAR_FACTOR / 2);
-            this.y = startPos.y + (TILE_HEIGHT / 2);
-            this.speed = 40; // Pixels por segundo
+            const center = getTileCenter(startNode.x, startNode.y);
+            this.x = center.x;
+            this.y = center.y;
+            this.speed = 80; // Pixels por segundo
             this.radius = 8;
             this.maxHealth = 100;
             this.health = this.maxHealth;
@@ -156,19 +173,17 @@ document.addEventListener('DOMContentLoaded', () => {
         move(deltaTime) {
             if (this.pathIndex < path.length - 1) {
                 const targetNode = path[this.pathIndex + 1];
-                const targetPosRaw = toIso(targetNode.x, targetNode.y);
-                const targetX = targetPosRaw.x + (TILE_WIDTH / 2) - (TILE_WIDTH * SHEAR_FACTOR / 2);
-                const targetY = targetPosRaw.y + (TILE_HEIGHT / 2);
+                const targetCenter = getTileCenter(targetNode.x, targetNode.y);
 
-                const dx = targetX - this.x;
-                const dy = targetY - this.y;
+                const dx = targetCenter.x - this.x;
+                const dy = targetCenter.y - this.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 const moveDistance = this.speed * deltaTime;
 
                 if (distance < moveDistance) {
                     this.pathIndex++;
-                    this.x = targetX;
-                    this.y = targetY;
+                    this.x = targetCenter.x;
+                    this.y = targetCenter.y;
                 } else {
                     this.x += (dx / distance) * moveDistance;
                     this.y += (dy / distance) * moveDistance;
@@ -193,9 +208,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     class Tower {
         constructor(col, row) {
-            const pos = toIso(col, row);
-            this.x = pos.x + (TILE_WIDTH / 2) - (TILE_WIDTH * SHEAR_FACTOR / 2);
-            this.y = pos.y + (TILE_HEIGHT / 2);
+            const center = getTileCenter(col, row);
+            this.x = center.x;
+            this.y = center.y;
             this.col = col;
             this.row = row;
 
@@ -209,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         draw() {
             ctx.fillStyle = "#0000ff";
             ctx.beginPath();
-            ctx.arc(this.x, this.y - 10, 10, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y - 5, 10, 0, Math.PI * 2);
             ctx.fill();
         }
 
@@ -247,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         log(`Clique na grelha [${col}, ${row}]`);
 
         const TOWER_COST = 100;
-        if (col < 0 || col >= gridCols || row < 0 || row >= gridRows) return;
+        if (col < 0 || col >= gridCols || row < 0 || row >= gridRows-1) return;
 
         const isPlayerSide = row >= gridRows / 2;
         const isPath = path.some(p => p.x === col && p.y === row);
@@ -264,11 +279,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ============== CICLO DE JOGO (GAMELOOP) ==============
     let lastTime = 0;
+    let monsterSpawnCooldown = 3; // Cooldown em segundos
 
     function gameLoop(timestamp) {
         if (!gameStarted) return;
         const deltaTime = (timestamp - lastTime) / 1000;
         lastTime = timestamp;
+
+        // Spawning de monstros
+        monsterSpawnCooldown -= deltaTime;
+        if (monsterSpawnCooldown <= 0) {
+            monsters.push(new Monster());
+            monsterSpawnCooldown = 3; // Reinicia o cooldown
+        }
 
         drawGrid();
         towers.forEach(tower => tower.draw());
@@ -294,7 +317,6 @@ document.addEventListener('DOMContentLoaded', () => {
         startButton.style.display = 'none';
         log('O jogo começou!');
         monsters.push(new Monster());
-        setInterval(() => monsters.push(new Monster()), 3000);
         lastTime = performance.now();
         requestAnimationFrame(gameLoop);
     });
