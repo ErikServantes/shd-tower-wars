@@ -1,0 +1,11 @@
+body { 
+    margin: 0; 
+    padding: 0; 
+    background: #1a1a1a; 
+    overflow: hidden; 
+    touch-action: none; /* Impede o zoom acidental no telemóvel */
+}
+
+canvas { 
+    display: block; 
+}
