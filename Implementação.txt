@@ -1,0 +1,73 @@
+# PLANO DE IMPLEMENTAÇÃO: SHD-TOWERWARS
+# Contexto: Tower Defense Isométrico Mobile com Evolução Genética e Multiplayer Assíncrono (Ghost System).
+# Tecnologias: HTML5 Canvas, JavaScript (ES6+), Firebase Firestore/Hosting, GitHub Actions.
+
+ESTADO ATUAL DO PROJETO:
+[x] Repositório GitHub criado e sincronizado.
+[x] Estrutura básica de ficheiros (index.html, style.css, game.js).
+[x] Configuração inicial do Firebase Firestore e Hosting.
+[ ] Motor Isométrico funcional.
+[ ] Lógica de Rondas e Spawning.
+
+================================================================
+FASE 1: INFRAESTRUTURA E MOTOR VISUAL (CORE)
+================================================================
+Status: [EM PROGRESSO]
+
+[ ] 1.1 - Refinar Grade Isométrica: Implementar conversão de coordenadas (2D to Iso) com suporte a zoom/pan para mobile.
+[ ] 1.2 - Desenho do Caminho: Implementar o caminho em "S" vertical triplo baseado em array de coordenadas.
+[ ] 1.3 - Divisão de Campo: Visualizar a linha de demarcação (Equador) entre a zona do Jogador e a zona do Ghost.
+[ ] 1.4 - Responsividade: Garantir que o canvas se ajusta a diferentes rácios de ecrã (Portrait).
+
+================================================================
+FASE 2: ENTIDADES E MOVIMENTO
+================================================================
+Status: [PLANEADO]
+
+[ ] 2.1 - Sistema de Spawning: Criar classe 'Monster' com movimento baseado em "waypoints" do caminho.
+[ ] 2.2 - Atributos de Evolução: Implementar o sistema onde cada monstro enviado aumenta o 'Nível de Espécie' (NE).
+[ ] 2.3 - Gestão de Vagas: Permitir o envio de monstros durante a ronda ativa.
+[ ] 2.4 - Lógica de Vida: Perda de HP (100 total) quando monstros atingem a base.
+
+================================================================
+FASE 3: COMBATE E TORRES (DEFESA/ASSALTO)
+================================================================
+Status: [PLANEADO]
+
+[ ] 3.1 - Construção: Sistema de colocação de torres apenas na metade inferior da grade.
+[ ] 3.2 - Mix Tecnológico (Torres):
+    - Medieval: Besta de Cerco, Catapulta, Caldeirão de Óleo.
+    - Steampunk: Canhão Tesla, Morteiro a Vapor.
+    - Futurista: Torre de Prisma, Canhão de Pulso.
+[ ] 3.3 - Combate Torre-vs-Torre: Implementar alcance para torres atacarem torres inimigas próximas da linha média.
+[ ] 3.4 - Regeneração: Lógica de cura total das torres no fim de cada ronda.
+
+================================================================
+FASE 4: ECONOMIA E REGRAS DE RONDA
+================================================================
+Status: [PLANEADO]
+
+[ ] 4.1 - Ciclo de Ouro: Renda passiva por monstros vivos + bónus de abate + bónus de fim de ronda.
+[ ] 4.2 - Gestor de Tempo:
+    - Ronda mínima de 30 segundos.
+    - Countdown de 5 segundos após último monstro morrer.
+    - Botão "Start" para libertar vaga inicial.
+[ ] 4.3 - Menu Colapsável (UI): Implementar gavetas para seleção de 7 torres e 7 monstros.
+
+================================================================
+FASE 5: MULTIPLAYER ASSÍNCRONO (GHOST SYSTEM)
+================================================================
+Status: [PLANEADO]
+
+[ ] 5.1 - Sistema de Gravação: Logar ações (build/spawn) com timestamp e posição.
+[ ] 5.2 - Integração Firebase: Salvar JSON do 'Ghost' vitorioso no Firestore.
+[ ] 5.3 - Playback: Carregar e executar as ações do Ghost na metade superior do ecrã do novo jogador.
+[ ] 5.4 - Lista de Espera (Determinismo): Garantir que o Ghost executa ações assim que tiver ouro suficiente.
+
+================================================================
+NOTAS PARA O GEMINI:
+- Manter o código modular no game.js.
+- Priorizar performance para dispositivos móveis (evitar loops pesados).
+- As torres e unidades devem usar o estilo de Mix Tecnológico (Medieval/Steam/Futuro).
+- Sempre que completar uma tarefa, marcar com [x] neste ficheiro.
+================================================================
