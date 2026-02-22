@@ -56,18 +56,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ============== LÓGICA DE GRELHA E PERSPETIVA ==============
 
-    function resize() { /* ... (código existente) ... */ }
+    function resize() {
+        log('Redimensionando o canvas...');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        log(`Canvas redimensionado para ${canvas.width}x${canvas.height}`);
+        drawGrid(); // Desenha a grelha sempre que o tamanho da janela muda
+    }
     window.addEventListener('resize', resize);
 
-    function toIso(col, row) { /* ... (código existente) ... */ }
-    function drawGrid() { /* ... (código existente) ... */ }
-    function drawTile(x, y, isPath, isPlayerSide) { /* ... (código existente) ... */ }
-    
+    function toIso(col, row) {
+        let isoX = (col - row) * (tileSize * PERSPECTIVE_WIDTH);
+        let isoY = (col + row) * (tileSize * PERSPECTIVE_HEIGHT);
+        return {
+            x: isoX + canvas.width / 2,
+            y: isoY + 20
+        };
+    }
+
+    function drawGrid() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let row = 0; row < gridRows; row++) {
+            for (let col = 0; col < gridCols; col++) {
+                const { x, y } = toIso(col, row);
+                const isPath = path.some(p => p.x === col && p.y === row);
+                const isPlayerSide = row >= gridRows / 2;
+                drawTile(x, y, isPath, isPlayerSide);
+            }
+        }
+        log("Grelha desenhada.");
+    }
+
+    function drawTile(x, y, isPath, isPlayerSide) {
+        const tileWidthHalf = tileSize * PERSPECTIVE_WIDTH;
+        const tileHeightHalf = tileSize * PERSPECTIVE_HEIGHT;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + tileWidthHalf, y + tileHeightHalf);
+        ctx.lineTo(x, y + tileHeightHalf * 2);
+        ctx.lineTo(x - tileWidthHalf, y + tileHeightHalf);
+        ctx.closePath();
+        if (isPath) {
+            ctx.fillStyle = "#2c3e50";
+        } else {
+            ctx.fillStyle = isPlayerSide ? "#27ae6088" : "#c0392b88";
+        }
+        ctx.strokeStyle = "rgba(255,255,255,0.1)";
+        ctx.fill();
+        ctx.stroke();
+    }
+
     // NOVA FUNÇÃO: Converte coordenadas do ecrã para a grelha
     function screenToGrid(screenX, screenY) {
         const TILE_W_HALF = tileSize * PERSPECTIVE_WIDTH;
         const TILE_H_HALF = tileSize * PERSPECTIVE_HEIGHT;
-        
+
         // Ajusta para a origem da grelha (centro do canvas + offset Y)
         const mapX = screenX - (canvas.width / 2);
         const mapY = screenY - 20; // O mesmo offset Y da função toIso
@@ -102,7 +145,25 @@ document.addEventListener('DOMContentLoaded', () => {
             log(`Monstro sofreu ${amount} de dano, vida restante: ${this.health}`);
         }
 
-        move() { /* ... (código existente) ... */ }
+        move() {
+            if (this.pathIndex < path.length - 1) {
+                const targetNode = path[this.pathIndex + 1];
+                const targetPos = toIso(targetNode.x, targetNode.y);
+
+                const dx = targetPos.x - this.x;
+                const dy = targetPos.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < this.speed) {
+                    this.pathIndex++;
+                    this.x = targetPos.x;
+                    this.y = targetPos.y;
+                } else {
+                    this.x += (dx / distance) * this.speed;
+                    this.y += (dy / distance) * this.speed;
+                }
+            }
+        }
 
         draw() {
             // Desenha o monstro
@@ -148,7 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
         findTarget(monsterList) {
             if (this.target && this.target.health > 0) {
                 // Verifica se o alvo ainda está no alcance
-                const dist = Math.sqrt(Math.pow(this.col - this.target.gridPos.x, 2) + Math.pow(this.row - this.target.gridPos.y, 2));
+                const monsterGridPos = path[this.target.pathIndex];
+                const dist = Math.sqrt(Math.pow(this.col - monsterGridPos.x, 2) + Math.pow(this.row - monsterGridPos.y, 2));
                 if (dist <= this.range) return; // Mantém o alvo
             }
             this.target = null;
@@ -160,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (dist < closestDist) {
                     closestDist = dist;
                     this.target = monster;
-                    this.target.gridPos = monsterGridPos; // Guarda a posição para referência
                 }
             }
         }
@@ -177,6 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============== LÓGICA DE CONSTRUÇÃO ==============
 
     canvas.addEventListener('click', (e) => {
+        if (!gameStarted) return; // Não permite construir antes de o jogo começar
         const rect = canvas.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const clickY = e.clientY - rect.top;
@@ -213,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // ============== CICLO DE JOGO (GAMELOOP) ==============
+    // ============== CICLO DE JOGO (GAMELOOP) ==============\
     let lastTime = 0;
 
     function gameLoop(timestamp) {
@@ -241,50 +303,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 5. Remove monstros mortos
         monsters = monsters.filter(monster => monster.health > 0);
-        
+
         requestAnimationFrame(gameLoop);
     }
 
-    startButton.addEventListener('click', () => { /* ... (código existente) ... */ });
+    startButton.addEventListener('click', () => {
+        if (gameStarted) return;
+        gameStarted = true;
+        startButton.style.display = 'none';
+        log('O jogo começou!');
+        // Spawn de um monstro para teste inicial
+        monsters.push(new Monster());
+        lastTime = performance.now();
+        requestAnimationFrame(gameLoop);
+    });
+    
     log('DOM pronto. Inicializando o jogo.');
-    resize();
+    resize(); // Chama resize para configurar o canvas e desenhar a grelha inicial
     updateGold(0); // Força a atualização inicial do HUD
 
-    // Funções auxiliares que foram movidas ou estão implícitas no novo código
-    // mas precisam estar definidas para não quebrar a referência se ainda existirem
-    // (medida de segurança)
-    resize = function() {
-        log('Redimensionando o canvas...');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        log(`Canvas redimensionado para ${canvas.width}x${canvas.height}`);
-    }
-
-    toIso = function(col, row) {
-        let isoX = (col - row) * (tileSize * PERSPECTIVE_WIDTH);
-        let isoY = (col + row) * (tileSize * PERSPECTIVE_HEIGHT);
-        return { 
-            x: isoX + canvas.width / 2, 
-            y: isoY + 20 
-        };
-    }
-
-    drawTile = function(x, y, isPath, isPlayerSide) {
-        const tileWidthHalf = tileSize * PERSPECTIVE_WIDTH;
-        const tileHeightHalf = tileSize * PERSPECTIVE_HEIGHT;
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + tileWidthHalf, y + tileHeightHalf);
-        ctx.lineTo(x, y + tileHeightHalf * 2);
-        ctx.lineTo(x - tileWidthHalf, y + tileHeightHalf);
-        ctx.closePath();
-        if (isPath) {
-            ctx.fillStyle = "#2c3e50";
-        } else {
-            ctx.fillStyle = isPlayerSide ? "#27ae6088" : "#c0392b88";
-        }
-        ctx.strokeStyle = "rgba(255,255,255,0.1)";
-        ctx.fill();
-        ctx.stroke();
-    }
 });
