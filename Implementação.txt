@@ -1,18 +1,16 @@
-# PLANO DE IMPLEMENTAÇÃO: SHD-TOWERWARS
-# Contexto: Tower Defense Isométrico Mobile com Evolução Genética e Multiplayer Assíncrono (Ghost System).
-# Tecnologias: HTML5 Canvas, JavaScript (ES6+), Firebase Firestore/Hosting, GitHub Actions.
-
-ESTADO ATUAL DO PROJETO:
-[x] Repositório GitHub criado e sincronizado.
-[x] Estrutura básica de ficheiros (index.html, style.css, game.js).
-[x] Configuração inicial do Firebase Firestore e Hosting.
-[x] Motor Isométrico funcional.
-[x] Lógica de Rondas e Spawning (básica).
 
 ================================================================
-FASE 1: INFRAESTRUTURA E MOTOR VISUAL (CORE)
+PROJETO: Echoes of Evolution (Tower Defense Assimétrico)
 ================================================================
-Status: [CONCLUÍDO]
+FASES DE IMPLEMENTAÇÃO
+----------------------------------------------------------------
+Última atualização: [Data da última edição pelo Gemini]
+----------------------------------------------------------------
+
+================================================================
+FASE 1: FUNDAÇÃO E CENÁRIO (Grelha de Perspetiva)
+================================================================
+Status: [COMPLETO]
 
 [x] 1.1 - Refinar Grelha de Perspetiva: Implementar projeção de 1 ponto com conversão de coordenadas (screen-to-grid). Ângulo de câmara ajustável.
 [x] 1.2 - Desenho do Caminho Dinâmico: Implementado sistema de geração de percurso a partir de VÉRTICES, permitindo fácil edição de caminhos complexos numa grelha de 15x30.
@@ -27,7 +25,7 @@ Status: [EM ANDAMENTO]
 [x] 2.1 - Sistema de Spawning e Movimento: Criada classe 'Monster' com movimento fluido baseado no percurso gerado por vértices. Monstros são gerados a um intervalo de tempo fixo.
 [ ] 2.2 - Atributos de Evolução: Implementar o sistema onde cada monstro enviado aumenta o 'Nível de Espécie' (NE).
 [ ] 2.3 - Gestão de Vagas: Permitir o envio de monstros durante a ronda ativa.
-[~] 2.4 - Lógica de Vida: Perda de HP (100 total) quando monstros atingem a base. (PRÓXIMO PASSO)
+[x] 2.4 - Lógica de Vida: Perda de HP (100 total) quando monstros atingem a base e Fim de Jogo.
 
 ================================================================
 FASE 3: COMBATE E TORRES (DEFESA/ASSALTO)
@@ -35,7 +33,7 @@ FASE 3: COMBATE E TORRES (DEFESA/ASSALTO)
 Status: [EM ANDAMENTO]
 
 [x] 3.1 - Construção de Torres: Implementado sistema de colocação de torres (classe 'Tower') na metade inferior da grelha, com validação de ouro e de posição.
-[~] 3.2 - Combate Básico: Torres encontram o monstro mais próximo no seu alcance e causam dano. Barras de vida dos monstros funcionais.
+[x] 3.2 - Combate Básico: Torres encontram o monstro mais próximo no seu alcance e causam dano. Barras de vida funcionais.
 [ ] 3.3 - Mix Tecnológico (Torres):
     - Medieval: Besta de Cerco, Catapulta, Caldeirão de Óleo.
     - Steampunk: Canhão Tesla, Morteiro a Vapor.
@@ -48,19 +46,17 @@ FASE 4: ECONOMIA E REGRAS DE RONDA
 ================================================================
 Status: [EM ANDAMENTO]
 
-[~] 4.1 - Ciclo de Ouro: Implementado ouro inicial e custo de construção. (Falta: Renda passiva e bónus).
-[~] 4.2 - Gestor de Tempo e Início de Jogo:
-    - [x] Botão "Start" para libertar vaga inicial.
-    - [ ] Ronda mínima de 30 segundos.
-    - [ ] Countdown de 5 segundos após último monstro morrer.
-[ ] 4.3 - Menu Colapsável (UI): Implementar gavetas para seleção de 7 torres e 7 monstros.
+[x] 4.1 - Ciclo de Ouro: Implementada renda de ouro passiva (1 ouro/seg).
+[x] 4.2 - Gestor de Tempo: Implementado cronómetro de ronda e lógica de fim de ronda (vitória/derrota).
+[ ] 4.3 - UI de Ações (Rodas): Implementar rodas de seleção para 7 torres e 7 monstros. (PRÓXIMO PASSO)
+[ ] 4.4 - Início de Ronda Dinâmico: Remover botão "START". A ronda começa com a primeira ação do jogador (enviar monstro ou construir torre).
 
 ================================================================
 FASE 5: MULTIPLAYER ASSÍNCRONO (GHOST SYSTEM)
 ================================================================
-Status: [PLANEADO]
+Status: [EM ANDAMENTO]
 
-[ ] 5.1 - Sistema de Gravação: Logar ações (build/spawn) com timestamp e posição.
+[x] 5.1 - Sistema de Gravação: Ações de construção são guardadas num array (`playerActions`) e exibidas no fim da ronda.
 [ ] 5.2 - Integração Firebase: Salvar JSON do 'Ghost' vitorioso no Firestore.
 [ ] 5.3 - Playback: Carregar e executar as ações do Ghost na metade superior do ecrã do novo jogador.
 [ ] 5.4 - Lista de Espera (Determinismo): Garantir que o Ghost executa ações assim que tiver ouro suficiente.
