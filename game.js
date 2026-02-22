@@ -29,9 +29,10 @@ const path = [
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    drawGrid(); // Redesenha a grelha sempre que a janela muda de tamanho
 }
 window.addEventListener('resize', resize);
-resize();
+
 
 function toIso(col, row) {
     let isoX = (col - row) * (tileSize * 0.7);
@@ -76,6 +77,7 @@ function drawTile(x, y, isPath, isPlayerSide) {
 // ============== FASE 2: ENTIDADES E MOVIMENTO ==============
 
 const monsters = [];
+let gameStarted = false;
 
 class Monster {
     constructor() {
@@ -99,6 +101,11 @@ class Monster {
 
         if (distance < this.speed) {
             this.pathIndex++;
+            // Para garantir que não ultrapassa o fim do caminho
+            if(this.pathIndex >= path.length) {
+                this.pathIndex = path.length - 1;
+                return;
+            }
             const nextGridPos = path[this.pathIndex];
             const nextIsoPos = toIso(nextGridPos.x, nextGridPos.y);
             this.x = nextIsoPos.x;
@@ -118,11 +125,17 @@ class Monster {
 }
 
 document.getElementById('startButton').addEventListener('click', () => {
+    if (!gameStarted) {
+        gameStarted = true;
+        gameLoop(); // Inicia o loop do jogo
+    }
     monsters.push(new Monster());
 });
 
 function gameLoop() {
-    drawGrid();
+    if (!gameStarted) return; // Garante que o loop não corre antes do tempo
+
+    drawGrid(); // Limpa e desenha o fundo a cada frame
     
     monsters.forEach(monster => {
         monster.move();
@@ -132,4 +145,5 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-gameLoop();
+// Chama resize() uma vez para desenhar o estado inicial
+resize();
