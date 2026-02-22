@@ -22,7 +22,7 @@ Status: [CONCLUÍDO]
 ================================================================
 FASE 2: ENTIDADES E MOVIMENTO
 ================================================================
-Status: [PLANEADO]
+Status: [EM ANDAMENTO]
 
 [ ] 2.1 - Sistema de Spawning: Criar classe 'Monster' com movimento baseado em "waypoints" do caminho.
 [ ] 2.2 - Atributos de Evolução: Implementar o sistema onde cada monstro enviado aumenta o 'Nível de Espécie' (NE).

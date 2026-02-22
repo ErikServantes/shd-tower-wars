@@ -33,58 +33,102 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// 3. Conversão "Suave" (Ângulo menos pronunciado)
 function toIso(col, row) {
-    // Reduzimos o multiplicador horizontal para o mapa não sair do ecrã
-    // Aumentamos o peso do 'row' no Y para esticar verticalmente
     let isoX = (col - row) * (tileSize * 0.7);
     let isoY = (col + row) * (tileSize * 0.35); 
-    
-    // Centralização dinâmica
     return { 
         x: isoX + canvas.width / 2, 
-        y: isoY + 50 // Margem pequena no topo
+        y: isoY + 50
     };
 }
 
-// 4. Desenho atualizado
 function drawGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
     for (let r = 0; r < gridRows; r++) {
         for (let c = 0; c < gridCols; c++) {
             const pos = toIso(c, r);
             const isPath = path.some(p => p.x === c && p.y === r);
-            // A linha divisória está na linha 11 (meio de 22)
             const isPlayerSide = r >= gridRows / 2; 
-            
             drawTile(pos.x, pos.y, isPath, isPlayerSide);
         }
     }
 }
 
 function drawTile(x, y, isPath, isPlayerSide) {
-    const scaledTileSize = tileSize; // Não precisamos mais de `scale`
+    const tileWidthHalf = tileSize * 0.7;
+    const tileHeightHalf = tileSize * 0.35;
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.lineTo(x + scaledTileSize * 0.7 * 2, y + scaledTileSize * 0.35 * 2 * 0.5);
-    ctx.lineTo(x, y + scaledTileSize * 0.35 * 2);
-    ctx.lineTo(x - scaledTileSize * 0.7 * 2, y + scaledTileSize * 0.35 * 2 * 0.5);
+    ctx.lineTo(x + tileWidthHalf, y + tileHeightHalf);
+    ctx.lineTo(x, y + tileHeightHalf * 2);
+    ctx.lineTo(x - tileWidthHalf, y + tileHeightHalf);
     ctx.closePath();
-
     if (isPath) {
-        ctx.fillStyle = "#2c3e50"; // Cor do caminho
+        ctx.fillStyle = "#2c3e50";
     } else {
         ctx.fillStyle = isPlayerSide ? "#27ae6088" : "#c0392b88"; 
     }
-
     ctx.strokeStyle = "rgba(255,255,255,0.1)";
     ctx.fill();
     ctx.stroke();
 }
 
+// ============== FASE 2: ENTIDADES E MOVIMENTO ==============
+
+const monsters = [];
+
+class Monster {
+    constructor() {
+        this.pathIndex = 0;
+        const startPos = toIso(path[this.pathIndex].x, path[this.pathIndex].y);
+        this.x = startPos.x;
+        this.y = startPos.y;
+        this.speed = 1.5; // Velocidade de movimento
+        this.radius = 8; // Tamanho do monstro
+    }
+
+    move() {
+        if (this.pathIndex >= path.length - 1) return;
+
+        const targetGridPos = path[this.pathIndex + 1];
+        const targetIsoPos = toIso(targetGridPos.x, targetGridPos.y);
+
+        const dx = targetIsoPos.x - this.x;
+        const dy = targetIsoPos.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < this.speed) {
+            this.pathIndex++;
+            const nextGridPos = path[this.pathIndex];
+            const nextIsoPos = toIso(nextGridPos.x, nextGridPos.y);
+            this.x = nextIsoPos.x;
+            this.y = nextIsoPos.y;
+        } else {
+            this.x += (dx / distance) * this.speed;
+            this.y += (dy / distance) * this.speed;
+        }
+    }
+
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+    }
+}
+
+document.getElementById('startButton').addEventListener('click', () => {
+    monsters.push(new Monster());
+});
+
 function gameLoop() {
     drawGrid();
+    
+    monsters.forEach(monster => {
+        monster.move();
+        monster.draw();
+    });
+
     requestAnimationFrame(gameLoop);
 }
 
