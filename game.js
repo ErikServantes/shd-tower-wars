@@ -46,8 +46,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const path=generatePathFromVertices(vertices);
     function updateGold(a){gold+=a;goldSpan.textContent=gold}
     function updateHealth(a){playerHealth+=a;hpSpan.textContent=playerHealth;if(playerHealth<=0)endGame(false)}
-    function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;if(gameStarted)drawGrid();}
-    window.addEventListener('resize',resize);
+    
+    function resize() {
+        const targetAspectRatio = 1 / 2;
+        const windowAspectRatio = window.innerWidth / window.innerHeight;
+        let newCanvasWidth, newCanvasHeight;
+
+        if (windowAspectRatio > targetAspectRatio) {
+            // Window is wider than the target aspect ratio, so lock to height
+            newCanvasHeight = window.innerHeight;
+            newCanvasWidth = newCanvasHeight * targetAspectRatio;
+        } else {
+            // Window is taller or equal to the target aspect ratio, so lock to width
+            newCanvasWidth = window.innerWidth;
+            newCanvasHeight = newCanvasWidth / targetAspectRatio;
+        }
+
+        canvas.width = newCanvasWidth;
+        canvas.height = newCanvasHeight;
+        
+        // Redraw the grid after resizing
+        if (gameStarted) {
+            drawGrid();
+        } else {
+            // If the game hasn't started, we might still want to draw the initial empty grid
+            drawGrid(); 
+        }
+    }
+
+    window.addEventListener('resize', resize);
+
     function project(c,r){const P=0.3,Y_T=100,Y_B=canvas.height-50,T_Y=Y_B-Y_T,W_B=canvas.width*0.9,W_T=W_B*(1-P),rR=r/(gridRows-1),y=Y_T+rR*T_Y,w=W_T+rR*(W_B-W_T),tW=w/gridCols,sX=(canvas.width-w)/2,x=sX+c*tW;return{x,y,tileWidth:tW}}
     function drawGrid(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let r=0;r<gridRows;r++)for(let c=0;c<gridCols;c++)drawTile(path.some(p=>p.x===c&&p.y===r),r>=15,c,r)}
     function drawTile(i,p,c,r){const C=project(c,r),N=project(c,r+1);ctx.beginPath();ctx.moveTo(C.x,C.y);ctx.lineTo(C.x+C.tileWidth,C.y);ctx.lineTo(N.x+N.tileWidth,N.y);ctx.lineTo(N.x,N.y);ctx.closePath();ctx.fillStyle=i?"#2c3e50":(p?"#27ae6088":"#c0392b88");ctx.strokeStyle="rgba(255,255,255,0.1)";ctx.fill();ctx.stroke();}
@@ -80,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleCanvasClick(e) {
-        if (!selectedAction || selectedAction.type !== 'tower') return;
         const rect=canvas.getBoundingClientRect(),cX=e.clientX-rect.left,cY=e.clientY-rect.top;
         const {col,row} = screenToGrid(cX,cY);
         const TOWER_COST=100,canBuild=col>=0&&row>=15&&!path.some(p=>p.x===col&&p.y===row)&&!towers.some(t=>t.col===col&&t.row===row)&&gold>=TOWER_COST;

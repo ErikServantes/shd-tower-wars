@@ -1,11 +1,23 @@
 
 body { 
-    margin: 0; padding: 0; background: #333; 
-    overflow: hidden; touch-action: none; 
-    color: white; font-family: sans-serif;
+    margin: 0; 
+    padding: 0; 
+    background: #000; /* Fundo preto para o letterboxing */
+    overflow: hidden; 
+    touch-action: none; 
+    color: white; 
+    font-family: sans-serif;
+    /* Usar Flexbox para centrar o canvas */
+    display: flex;
+    align-items: center; /* Centrar verticalmente */
+    justify-content: center; /* Centrar horizontalmente */
+    height: 100vh; /* Ocupar a altura total do ecrã */
 }
 
-canvas { display: block; }
+canvas { 
+    display: block; 
+    background: #333; /* A cor de fundo original do canvas */
+}
 
 #hud { 
     position: absolute; top: 0; left: 0; width: 100%; padding: 10px;
