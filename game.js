@@ -1,8 +1,9 @@
 // Importar as bibliotecas do Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+// import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+// import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// CONFIGURAÇÃO DO FIREBASE (Vais colar os teus dados aqui depois)
+// CONFIGURAÇÃO DO FIREBASE (Temporariamente desativado para focar no motor de jogo)
+/*
 const firebaseConfig = {
     apiKey: "AQU_VAI_A_TUA_CHAVE",
     authDomain: "teu-projeto.firebaseapp.com",
@@ -16,6 +17,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 console.log("Firebase ligado com sucesso!");
+*/
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
