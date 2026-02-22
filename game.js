@@ -31,8 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridCols = 8;
     const gridRows = 22;
     const tileSize = 30;
-    const PERSPECTIVE_WIDTH = 0.7;
-    const PERSPECTIVE_HEIGHT = 0.6;
+    
+    // Fatores da nova projeção oblíqua
+    const TILE_WIDTH = tileSize * 1.5;
+    const TILE_HEIGHT = tileSize * 0.7;
+    const SHEAR_FACTOR = 0.5; // Fator de inclinação para o efeito 3D
 
     let gold = 500; // Ouro inicial
 
@@ -54,24 +57,28 @@ document.addEventListener('DOMContentLoaded', () => {
         goldSpan.textContent = gold;
     }
 
-    // ============== LÓGICA DE GRELHA E PERSPETIVA ==============
+    // ============== LÓGICA DE GRELHA E PERSPETIVA (OBLÍQUA) ==============
 
     function resize() {
         log('Redimensionando o canvas...');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         log(`Canvas redimensionado para ${canvas.width}x${canvas.height}`);
-        drawGrid(); // Desenha a grelha sempre que o tamanho da janela muda
+        drawGrid();
     }
     window.addEventListener('resize', resize);
 
+    // Função de projeção OBLÍQUA para alinhar a grelha verticalmente
     function toIso(col, row) {
-        let isoX = (col - row) * (tileSize * PERSPECTIVE_WIDTH);
-        let isoY = (col + row) * (tileSize * PERSPECTIVE_HEIGHT);
-        return {
-            x: isoX + canvas.width / 2,
-            y: isoY + 20
-        };
+        const shearAmount = TILE_WIDTH * SHEAR_FACTOR;
+        const screenX = col * TILE_WIDTH - row * shearAmount;
+        const screenY = row * TILE_HEIGHT;
+
+        // Centraliza a grelha
+        const totalGridWidth = (gridCols - 1) * TILE_WIDTH;
+        const offsetX = (canvas.width - totalGridWidth) / 2;
+
+        return { x: screenX + offsetX, y: screenY + 100 };
     }
 
     function drawGrid() {
@@ -84,18 +91,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 drawTile(x, y, isPath, isPlayerSide);
             }
         }
-        log("Grelha desenhada.");
     }
 
+    // Desenha um tile como um paralelogramo para a projeção oblíqua
     function drawTile(x, y, isPath, isPlayerSide) {
-        const tileWidthHalf = tileSize * PERSPECTIVE_WIDTH;
-        const tileHeightHalf = tileSize * PERSPECTIVE_HEIGHT;
+        const shearAmount = TILE_WIDTH * SHEAR_FACTOR;
+        
         ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + tileWidthHalf, y + tileHeightHalf);
-        ctx.lineTo(x, y + tileHeightHalf * 2);
-        ctx.lineTo(x - tileWidthHalf, y + tileHeightHalf);
+        ctx.moveTo(x, y); // Canto superior esquerdo
+        ctx.lineTo(x + TILE_WIDTH, y); // Canto superior direito
+        ctx.lineTo(x + TILE_WIDTH - shearAmount, y + TILE_HEIGHT); // Canto inferior direito
+        ctx.lineTo(x - shearAmount, y + TILE_HEIGHT); // Canto inferior esquerdo
         ctx.closePath();
+
         if (isPath) {
             ctx.fillStyle = "#2c3e50";
         } else {
@@ -106,18 +114,18 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.stroke();
     }
 
-    // NOVA FUNÇÃO: Converte coordenadas do ecrã para a grelha
+    // Converte coordenadas do ecrã para a nova grelha oblíqua
     function screenToGrid(screenX, screenY) {
-        const TILE_W_HALF = tileSize * PERSPECTIVE_WIDTH;
-        const TILE_H_HALF = tileSize * PERSPECTIVE_HEIGHT;
+        const shearAmount = TILE_WIDTH * SHEAR_FACTOR;
+        
+        const totalGridWidth = (gridCols-1) * TILE_WIDTH;
+        const offsetX = (canvas.width - totalGridWidth) / 2;
+        const relativeX = screenX - offsetX;
+        const relativeY = screenY - 100;
 
-        // Ajusta para a origem da grelha (centro do canvas + offset Y)
-        const mapX = screenX - (canvas.width / 2);
-        const mapY = screenY - 20; // O mesmo offset Y da função toIso
-
-        // Converte de volta para coordenadas da grelha
-        const col = Math.round((mapX / TILE_W_HALF + mapY / TILE_H_HALF) / 2);
-        const row = Math.round((mapY / TILE_H_HALF - mapX / TILE_W_HALF) / 2);
+        // Inverte a fórmula de projeção
+        const row = Math.round(relativeY / TILE_HEIGHT);
+        const col = Math.round((relativeX + row * shearAmount) / TILE_WIDTH);
 
         return { col, row };
     }
@@ -130,54 +138,55 @@ document.addEventListener('DOMContentLoaded', () => {
     class Monster {
         constructor() {
             this.pathIndex = 0;
-            const startPos = toIso(path[this.pathIndex].x, path[this.pathIndex].y);
-            this.x = startPos.x;
-            this.y = startPos.y;
-            this.speed = 1.5;
+            const startNode = path[this.pathIndex];
+            const startPos = toIso(startNode.x, startNode.y);
+            // Posiciona o monstro no centro do tile
+            this.x = startPos.x + (TILE_WIDTH / 2) - (TILE_WIDTH * SHEAR_FACTOR / 2);
+            this.y = startPos.y + (TILE_HEIGHT / 2);
+            this.speed = 40; // Pixels por segundo
             this.radius = 8;
             this.maxHealth = 100;
             this.health = this.maxHealth;
-            log('Novo monstro criado na posição inicial.');
         }
 
         takeDamage(amount) {
             this.health -= amount;
-            log(`Monstro sofreu ${amount} de dano, vida restante: ${this.health}`);
         }
 
-        move() {
+        move(deltaTime) {
             if (this.pathIndex < path.length - 1) {
                 const targetNode = path[this.pathIndex + 1];
-                const targetPos = toIso(targetNode.x, targetNode.y);
+                const targetPosRaw = toIso(targetNode.x, targetNode.y);
+                const targetX = targetPosRaw.x + (TILE_WIDTH / 2) - (TILE_WIDTH * SHEAR_FACTOR / 2);
+                const targetY = targetPosRaw.y + (TILE_HEIGHT / 2);
 
-                const dx = targetPos.x - this.x;
-                const dy = targetPos.y - this.y;
+                const dx = targetX - this.x;
+                const dy = targetY - this.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
+                const moveDistance = this.speed * deltaTime;
 
-                if (distance < this.speed) {
+                if (distance < moveDistance) {
                     this.pathIndex++;
-                    this.x = targetPos.x;
-                    this.y = targetPos.y;
+                    this.x = targetX;
+                    this.y = targetY;
                 } else {
-                    this.x += (dx / distance) * this.speed;
-                    this.y += (dy / distance) * this.speed;
+                    this.x += (dx / distance) * moveDistance;
+                    this.y += (dy / distance) * moveDistance;
                 }
             }
         }
 
         draw() {
-            // Desenha o monstro
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             ctx.fillStyle = 'red';
             ctx.fill();
-
-            // Desenha a barra de vida
+            
             const healthBarWidth = 20;
             const healthPercentage = this.health / this.maxHealth;
-            ctx.fillStyle = '#ff0000'; // Fundo vermelho
+            ctx.fillStyle = '#ff0000';
             ctx.fillRect(this.x - healthBarWidth / 2, this.y - this.radius - 10, healthBarWidth, 5);
-            ctx.fillStyle = '#00ff00'; // Vida verde
+            ctx.fillStyle = '#00ff00';
             ctx.fillRect(this.x - healthBarWidth / 2, this.y - this.radius - 10, healthBarWidth * healthPercentage, 5);
         }
     }
@@ -185,40 +194,31 @@ document.addEventListener('DOMContentLoaded', () => {
     class Tower {
         constructor(col, row) {
             const pos = toIso(col, row);
-            this.x = pos.x;
-            this.y = pos.y + (tileSize * PERSPECTIVE_HEIGHT); // Ajusta para a base do tile
+            this.x = pos.x + (TILE_WIDTH / 2) - (TILE_WIDTH * SHEAR_FACTOR / 2);
+            this.y = pos.y + (TILE_HEIGHT / 2);
             this.col = col;
             this.row = row;
 
-            this.range = 3; // Alcance em tiles
+            this.range = 150; // Alcance em pixels
             this.damage = 10;
             this.fireRate = 1; // 1 tiro por segundo
             this.fireCooldown = 0;
             this.target = null;
-
-            log(`Torre construída em [${col}, ${row}]`);
         }
 
         draw() {
-            ctx.fillStyle = "#0000ff"; // Cor azul para a torre
+            ctx.fillStyle = "#0000ff";
             ctx.beginPath();
             ctx.arc(this.x, this.y - 10, 10, 0, Math.PI * 2);
             ctx.fill();
         }
 
         findTarget(monsterList) {
-            if (this.target && this.target.health > 0) {
-                // Verifica se o alvo ainda está no alcance
-                const monsterGridPos = path[this.target.pathIndex];
-                const dist = Math.sqrt(Math.pow(this.col - monsterGridPos.x, 2) + Math.pow(this.row - monsterGridPos.y, 2));
-                if (dist <= this.range) return; // Mantém o alvo
-            }
             this.target = null;
             let closestDist = this.range + 1;
 
             for (const monster of monsterList) {
-                const monsterGridPos = path[monster.pathIndex];
-                const dist = Math.sqrt(Math.pow(this.col - monsterGridPos.x, 2) + Math.pow(this.row - monsterGridPos.y, 2));
+                const dist = Math.sqrt(Math.pow(this.x - monster.x, 2) + Math.pow(this.y - monster.y, 2));
                 if (dist < closestDist) {
                     closestDist = dist;
                     this.target = monster;
@@ -228,9 +228,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         attack(deltaTime) {
             this.fireCooldown -= deltaTime;
-            if (this.fireCooldown <= 0 && this.target) {
+            if (this.fireCooldown <= 0 && this.target && this.target.health > 0) {
                 this.target.takeDamage(this.damage);
-                this.fireCooldown = 1 / this.fireRate; // Reinicia o cooldown
+                this.fireCooldown = 1 / this.fireRate;
             }
         }
     }
@@ -238,69 +238,51 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============== LÓGICA DE CONSTRUÇÃO ==============
 
     canvas.addEventListener('click', (e) => {
-        if (!gameStarted) return; // Não permite construir antes de o jogo começar
+        if (!gameStarted) return;
         const rect = canvas.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const clickY = e.clientY - rect.top;
 
         const { col, row } = screenToGrid(clickX, clickY);
-        log(`Clique detetado nas coordenadas [${clickX}, ${clickY}] -> Grelha [${col}, ${row}]`);
+        log(`Clique na grelha [${col}, ${row}]`);
 
-        // Validações para construir
         const TOWER_COST = 100;
+        if (col < 0 || col >= gridCols || row < 0 || row >= gridRows) return;
+
         const isPlayerSide = row >= gridRows / 2;
         const isPath = path.some(p => p.x === col && p.y === row);
         const isOccupied = towers.some(t => t.col === col && t.row === row);
 
-        if (!isPlayerSide) {
-            log('Falha ao construir: Fora da área do jogador.');
-            return;
-        }
-        if (isPath) {
-            log('Falha ao construir: Não pode construir no caminho.');
-            return;
-        }
-        if (isOccupied) {
-            log('Falha ao construir: Já existe uma torre no local.');
-            return;
-        }
-        if (gold < TOWER_COST) {
-            log(`Falha ao construir: Ouro insuficiente (Custo: ${TOWER_COST}, Ouro: ${gold})`);
-            return;
-        }
+        if (!isPlayerSide) { log('Não pode construir fora da sua área.'); return; }
+        if (isPath) { log('Não pode construir no caminho.'); return; }
+        if (isOccupied) { log('Já existe uma torre aí.'); return; }
+        if (gold < TOWER_COST) { log('Ouro insuficiente.'); return; }
 
-        // Se todas as validações passarem
         updateGold(-TOWER_COST);
         towers.push(new Tower(col, row));
     });
 
-
-    // ============== CICLO DE JOGO (GAMELOOP) ==============\n    let lastTime = 0;
+    // ============== CICLO DE JOGO (GAMELOOP) ==============
+    let lastTime = 0;
 
     function gameLoop(timestamp) {
         if (!gameStarted) return;
-        const deltaTime = (timestamp - lastTime) / 1000; // Tempo em segundos
+        const deltaTime = (timestamp - lastTime) / 1000;
         lastTime = timestamp;
 
-        // 1. Limpa e desenha a grelha
         drawGrid();
-
-        // 2. Desenha as torres
         towers.forEach(tower => tower.draw());
-
-        // 3. Atualiza, move e desenha monstros
+        
         monsters.forEach(monster => {
             monster.move(deltaTime);
             monster.draw();
         });
 
-        // 4. Lógica de ataque das torres
         towers.forEach(tower => {
             tower.findTarget(monsters);
             tower.attack(deltaTime);
         });
 
-        // 5. Remove monstros mortos
         monsters = monsters.filter(monster => monster.health > 0);
 
         requestAnimationFrame(gameLoop);
@@ -311,14 +293,14 @@ document.addEventListener('DOMContentLoaded', () => {
         gameStarted = true;
         startButton.style.display = 'none';
         log('O jogo começou!');
-        // Spawn de um monstro para teste inicial
         monsters.push(new Monster());
+        setInterval(() => monsters.push(new Monster()), 3000);
         lastTime = performance.now();
         requestAnimationFrame(gameLoop);
     });
     
     log('DOM pronto. Inicializando o jogo.');
-    resize(); // Chama resize para configurar o canvas e desenhar a grelha inicial
-    updateGold(0); // Força a atualização inicial do HUD
+    resize();
+    updateGold(0);
 
 });
