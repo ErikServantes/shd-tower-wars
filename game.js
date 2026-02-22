@@ -35,7 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let playerActions, selectedAction, lastTime = 0;
 
     function generatePathFromVertices(v){/*...*/const p=[];if(v.length===0)return p;for(let i=0;i<v.length-1;i++){let s=v[i],e=v[i+1],x=s.x,y=s.y,dX=Math.sign(e.x-s.x),dY=Math.sign(e.y-s.y);while(x!==e.x||y!==e.y){p.push({x,y});if(x!==e.x)x+=dX;else if(y!==e.y)y+=dY}}p.push(v[v.length-1]);return p}
-    const vertices=[{x:4,y:0},{x:4,y:3},{x:6,y:3},{x:6,y:1},{x:8,y:1},{x:8,y:5},{x:13,y:5},{x:13,y:9},{x:6,y:9},{x:6,y:6},{x:2,y:6},{x:2,y:13},{x:7,y:13},{x:7,y:16},{x:12,y:16},{x:12,y:23},{x:9,y:23},{x:9,y:20},{x:2,y:20},{x:2,y:24},{x:7,y:24},{x:7,y:28},{x:5,y:28},{x:5,y:26},{x:3,y:26},{x:3,y:29}];
+    const vertices = [
+        {x: 4, y: 0}, {x: 4, y: 3}, {x: 6, y: 3}, {x: 6, y: 1}, {x: 8, y: 1}, 
+        {x: 8, y: 5}, {x: 13, y: 5}, {x: 13, y: 9}, {x: 6, y: 9}, {x: 6, y: 6}, 
+        {x: 2, y: 6}, {x: 2, y: 13}, {x: 7, y: 13}, {x: 7, y: 16}, {x: 12, y: 16}, 
+        {x: 12, y: 23}, {x: 9, y: 23}, {x: 9, y: 20}, {x: 2, y: 20}, {x: 2, y: 24}, 
+        {x: 7, y: 24}, {x: 7, y: 28}, {x: 9, y: 28}, {x: 9, y: 26}, {x: 11, y: 26}, 
+        {x: 11, y: 29}
+    ];
     const path=generatePathFromVertices(vertices);
     function updateGold(a){gold+=a;goldSpan.textContent=gold}
     function updateHealth(a){playerHealth+=a;hpSpan.textContent=playerHealth;if(playerHealth<=0)endGame(false)}
