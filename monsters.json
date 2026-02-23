@@ -2,6 +2,7 @@
 {
   "goblin": {
     "name": "Goblin Básico",
+    "symbol": "◉",
     "description": "Rápido mas frágil. Ideal para sobrecarregar defesas iniciais.",
     "levels": [
       {
@@ -35,6 +36,7 @@
   },
   "orc": {
     "name": "Orc Guerreiro",
+    "symbol": "⊗",
     "description": "Lento mas resistente, capaz de absorver muito dano.",
     "levels": [
       {

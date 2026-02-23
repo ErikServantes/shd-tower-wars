@@ -2,6 +2,7 @@
 {
   "archer": {
     "name": "Torre de Arqueiro",
+    "symbol": "⌖",
     "description": "Uma torre versátil com bom alcance e cadência de tiro.",
     "levels": [
       {
@@ -35,6 +36,7 @@
   },
   "mage": {
     "name": "Torre de Mago",
+    "symbol": "✨",
     "description": "Causa dano em área e abranda os inimigos.",
     "levels": [
       {
