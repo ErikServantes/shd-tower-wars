@@ -1,0 +1,36 @@
+{
+  "actions": [
+    {
+      "action": "spawn",
+      "type": "goblin",
+      "level": 1,
+      "timestamp": 1.5
+    },
+    {
+      "action": "spawn",
+      "type": "orc",
+      "level": 1,
+      "timestamp": 5.0
+    },
+    {
+      "action": "build",
+      "type": "cannon",
+      "level": 1,
+      "col": 5,
+      "row": 5,
+      "timestamp": 8.0
+    },
+    {
+      "action": "spawn",
+      "type": "goblin",
+      "level": 1,
+      "timestamp": 10.0
+    },
+    {
+      "action": "spawn",
+      "type": "bat",
+      "level": 1,
+      "timestamp": 12.5
+    }
+  ]
+}
