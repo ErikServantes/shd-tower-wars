@@ -13,24 +13,6 @@
         "range": 150,
         "fireRate": 1,
         "asset": "assets/towers/archer_1.png"
-      },
-      {
-        "level": 2,
-        "name": "Torre de Balista Nv. 2",
-        "cost": 150,
-        "damage": 22,
-        "range": 170,
-        "fireRate": 1.1,
-        "asset": "assets/towers/archer_2.png"
-      },
-      {
-        "level": 3,
-        "name": "Torre de Canhão Nv. 3",
-        "cost": 250,
-        "damage": 40,
-        "range": 200,
-        "fireRate": 1.2,
-        "asset": "assets/towers/archer_3.png"
       }
     ]
   },
@@ -48,26 +30,86 @@
         "fireRate": 0.8,
         "special": "splash_slow",
         "asset": "assets/towers/mage_1.png"
-      },
+      }
+    ]
+  },
+  "cannon": {
+    "name": "Torre de Canhão",
+    "symbol": "💣",
+    "description": "Dispara projéteis explosivos que causam dano em área.",
+    "levels": [
       {
-        "level": 2,
-        "name": "Torre de Arcano Nv. 2",
+        "level": 1,
+        "name": "Canhão Nv. 1",
+        "cost": 150,
+        "damage": 25,
+        "range": 120,
+        "fireRate": 0.5,
+        "asset": "assets/towers/cannon_1.png"
+      }
+    ]
+  },
+  "slow": {
+    "name": "Torre de Gelo",
+    "symbol": "❄️",
+    "description": "Abranda drasticamente os inimigos, mas causa pouco dano.",
+    "levels": [
+      {
+        "level": 1,
+        "name": "Torre de Gelo Nv. 1",
+        "cost": 80,
+        "damage": 2,
+        "range": 100,
+        "fireRate": 1.5,
+        "asset": "assets/towers/slow_1.png"
+      }
+    ]
+  },
+  "sniper": {
+    "name": "Torre de Sniper",
+    "symbol": "🎯",
+    "description": "Alcance massivo e dano elevado, mas cadência de tiro muito baixa.",
+    "levels": [
+      {
+        "level": 1,
+        "name": "Sniper Nv. 1",
         "cost": 200,
-        "damage": 15,
-        "range": 150,
-        "fireRate": 0.9,
-        "special": "splash_slow",
-        "asset": "assets/towers/mage_2.png"
-      },
+        "damage": 50,
+        "range": 300,
+        "fireRate": 0.2,
+        "asset": "assets/towers/sniper_1.png"
+      }
+    ]
+  },
+  "splash": {
+    "name": "Torre de Morteiro",
+    "symbol": "💥",
+    "description": "Dano em área que atinge múltiplos inimigos de uma vez.",
+    "levels": [
       {
-        "level": 3,
-        "name": "Torre de Arquimago Nv. 3",
-        "cost": 320,
-        "damage": 28,
-        "range": 180,
-        "fireRate": 1.0,
-        "special": "splash_freeze",
-        "asset": "assets/towers/mage_3.png"
+        "level": 1,
+        "name": "Morteiro Nv. 1",
+        "cost": 180,
+        "damage": 18,
+        "range": 160,
+        "fireRate": 0.6,
+        "asset": "assets/towers/splash_1.png"
+      }
+    ]
+  },
+  "farm": {
+    "name": "Gerador de Ouro",
+    "symbol": "💰",
+    "description": "Não ataca, mas gera ouro adicional ao longo do tempo.",
+    "levels": [
+      {
+        "level": 1,
+        "name": "Gerador Nv. 1",
+        "cost": 75,
+        "damage": 0,
+        "range": 0,
+        "fireRate": 0,
+        "asset": "assets/towers/farm_1.png"
       }
     ]
   }

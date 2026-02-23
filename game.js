@@ -132,10 +132,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ============== FUNÇÕES DE ESTADO DO JOGO ==============
     async function loadGameData() {
         try {
-            const [towersResponse, monstersResponse] = await Promise.all([fetch('towers.json'), fetch('monsters.json')]);
-            towerData = await towersResponse.json(); monsterData = await monstersResponse.json();
-            log("Dados de Torres e Monstros carregados.");
-        } catch (error) { log(`Erro ao carregar dados do jogo: ${error}`); }
+            const cacheBust = `?v=${new Date().getTime()}`;
+            const [towersResponse, monstersResponse] = await Promise.all([
+                fetch(`towers.json${cacheBust}`),
+                fetch(`monsters.json${cacheBust}`)
+            ]);
+            towerData = await towersResponse.json();
+            monsterData = await monstersResponse.json();
+            log("Dados de Torres e Monstros carregados (sem cache).");
+        } catch (error) {
+            log(`Erro ao carregar dados do jogo: ${error}`);
+        }
     }
     function endGame(isVictory){ gameStarted=false; alert(isVictory ? "Vitória!" : "Derrota!"); resetGame(); }
     async function saveGhost(actions){ if (actions.length > 0) { try { await db.collection("ghosts").add({ actions: actions, timestamp: firebase.firestore.FieldValue.serverTimestamp() }); log("Ghost salvo com sucesso."); } catch (e) { log("Erro ao salvar ghost: "+e); } } }

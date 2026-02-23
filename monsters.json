@@ -13,24 +13,6 @@
         "speed": 90,
         "reward": 5, 
         "asset": "assets/monsters/goblin_1.png"
-      },
-      {
-        "level": 2,
-        "name": "Goblin Lanceiro",
-        "cost": 40,
-        "health": 150,
-        "speed": 95,
-        "reward": 8, 
-        "asset": "assets/monsters/goblin_2.png"
-      },
-      {
-        "level": 3,
-        "name": "Hobgoblin",
-        "cost": 70,
-        "health": 250,
-        "speed": 85,
-        "reward": 15,
-        "asset": "assets/monsters/goblin_3.png"
       }
     ]
   },
@@ -47,24 +29,86 @@
         "speed": 60,
         "reward": 10,
         "asset": "assets/monsters/orc_1.png"
-      },
+      }
+    ]
+  },
+  "golem": {
+    "name": "Golem de Pedra",
+    "symbol": "🗿",
+    "description": "Extremamente lento e resistente, quase uma muralha ambulante.",
+    "levels": [
       {
-        "level": 2,
-        "name": "Orc Berserker",
-        "cost": 80,
-        "health": 450,
-        "speed": 65,
-        "reward": 18,
-        "asset": "assets/monsters/orc_2.png"
-      },
+        "level": 1,
+        "name": "Golem",
+        "cost": 120,
+        "health": 800,
+        "speed": 30,
+        "reward": 25,
+        "asset": "assets/monsters/golem_1.png"
+      }
+    ]
+  },
+  "bat": {
+    "name": "Morcego Vampiro",
+    "symbol": "🦇",
+    "description": "Ignora o caminho terrestre (voador) mas tem pouca vida.",
+    "levels": [
       {
-        "level": 3,
-        "name": "Orc Juggernaut",
-        "cost": 130,
-        "health": 700,
-        "speed": 55,
-        "reward": 30,
-        "asset": "assets/monsters/orc_3.png"
+        "level": 1,
+        "name": "Morcego",
+        "cost": 40,
+        "health": 80,
+        "speed": 100,
+        "reward": 7,
+        "asset": "assets/monsters/bat_1.png"
+      }
+    ]
+  },
+  "skeleton": {
+    "name": "Esqueleto Arqueiro",
+    "symbol": "💀",
+    "description": "Ataca as tuas torres à distância em vez de seguir o caminho.",
+    "levels": [
+      {
+        "level": 1,
+        "name": "Esqueleto",
+        "cost": 60,
+        "health": 120,
+        "speed": 70,
+        "reward": 12,
+        "asset": "assets/monsters/skeleton_1.png"
+      }
+    ]
+  },
+  "wolf": {
+    "name": "Lobo Veloz",
+    "symbol": "🐺",
+    "description": "Muito rápido e com vida moderada, bom para ataques surpresa.",
+    "levels": [
+      {
+        "level": 1,
+        "name": "Lobo",
+        "cost": 70,
+        "health": 200,
+        "speed": 120,
+        "reward": 15,
+        "asset": "assets/monsters/wolf_1.png"
+      }
+    ]
+  },
+  "dragon": {
+    "name": "Dragão Bebé",
+    "symbol": "🐲",
+    "description": "Unidade de elite. Cara, lenta, mas com muita vida e recompensa.",
+    "levels": [
+      {
+        "level": 1,
+        "name": "Dragão",
+        "cost": 300,
+        "health": 1500,
+        "speed": 40,
+        "reward": 100,
+        "asset": "assets/monsters/dragon_1.png"
       }
     ]
   }
