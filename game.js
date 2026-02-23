@@ -71,6 +71,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     monsterMenuBtn.addEventListener('click', () => showActionButtons('monsters'));
     document.querySelectorAll('.action-btn').forEach(btn => btn.addEventListener('click', () => handleActionButtonClick(btn)));
     canvas.addEventListener('click', handleCanvasClick);
+    document.addEventListener('keydown', handleKeyPress); // NOVO: Escutador de teclado
+
+    function spawnMonster(unitType) {
+        const level = 1;
+        const config = monsterData[unitType].levels[level - 1];
+        if (playerGold >= config.cost) {
+            startGameIfNeeded();
+            updatePlayerGold(-config.cost);
+            monsters.push(new Monster(unitType, level, path));
+            playerActions.push({ action: 'spawn', type: unitType, level: level, timestamp: roundTime });
+        }
+    }
+
+    function handleKeyPress(e) {
+        const keyNum = parseInt(e.key);
+        if (isNaN(keyNum) || keyNum < 1 || keyNum > 7) return; // Ignora teclas que não sejam 1-7
+
+        const monsterTypes = Object.keys(monsterData); // Obtém a lista de monstros: ["goblin", "orc", ...]
+        const unitType = monsterTypes[keyNum - 1]; // Associa a tecla ao monstro
+
+        if (unitType) {
+            spawnMonster(unitType);
+        }
+    }
 
     function updateActionButtons() {
         document.querySelectorAll('.action-btn').forEach(btn => {
@@ -109,19 +133,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const rect = canvas.getBoundingClientRect(), sX = e.clientX - rect.left, sY = e.clientY - rect.top;
         const { col, row } = screenToGrid(sX, sY);
         if (col < 0 || row < 0) return;
+
         const unitType = selectedAction.unit, level = 1;
         if (selectedAction.type === 'tower') {
             const config = towerData[unitType].levels[level - 1];
             if (playerGold >= config.cost && row >= 15 && !path.some(p => p.x === col && p.y === row) && !towers.some(t => t.col === col && t.row === row)) {
-                startGameIfNeeded(); updatePlayerGold(-config.cost); towers.push(new Tower(unitType, level, col, row));
+                startGameIfNeeded();
+                updatePlayerGold(-config.cost);
+                towers.push(new Tower(unitType, level, col, row));
                 playerActions.push({ action: 'build', type: unitType, level: level, col: col, row: row, timestamp: roundTime });
             }
         } else if (selectedAction.type === 'monster') {
-            const config = monsterData[unitType].levels[level - 1];
-            if (playerGold >= config.cost) {
-                startGameIfNeeded(); updatePlayerGold(-config.cost); monsters.push(new Monster(unitType, level, path));
-                playerActions.push({ action: 'spawn', type: unitType, level: level, timestamp: roundTime });
-            }
+            spawnMonster(unitType); // Lógica de spawn refatorada
         }
     }
 
