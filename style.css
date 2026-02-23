@@ -1,29 +1,77 @@
-/* Ficheiro CSS para Echoes of Evolution - v8 (JS-Driven Fonts) */
 
-/* --- Configuração Geral (sem alterações) --- */
-body { margin: 0; padding: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; display: flex; align-items: center; justify-content: center; height: 100vh; }
-canvas { display: block; background: #1a1a1a; }
+/* Ficheiro CSS para Echoes of Evolution - v9 (HUD Dupla) */
 
-/* --- HUD Superior (sem alterações) --- */
-#hud { position: absolute; top: 0; left: 0; width: 100%; padding: 10px 20px; display: flex; justify-content: space-between; pointer-events: none; background: linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0)); box-sizing: border-box; z-index: 10; }
+/* --- Configuração Geral --- */
+body {
+    margin: 0; padding: 0; background: #000; color: white;
+    font-family: sans-serif; overflow: hidden; touch-action: none;
+    /* Alterado para permitir posicionamento superior e inferior */
+    display: flex;
+    flex-direction: column; /* Organiza os elementos verticalmente */
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+canvas { display: block; background: #1a1a1a; width: 100%; flex-shrink: 1; min-height: 0; }
+
+/* --- Novas Barras de HUD --- */
+.hud-bar {
+    width: 100%;
+    padding: 5px 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    background: #000;
+    box-sizing: border-box;
+    z-index: 10;
+    flex-shrink: 0; /* Impede que as barras encolham */
+    font-size: 1.2em; /* Tamanho base para os ícones */
+}
+
+#enemy-hud {
+    justify-content: flex-end; /* Alinha à direita */
+}
+
+#player-hud {
+    justify-content: flex-start; /* Alinha à esquerda */
+    order: 2; /* Garante que fica abaixo do canvas, antes da barra de ações */
+}
+
+.hud-item {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Espaço entre o ícone e o texto */
+    font-weight: bold;
+}
 
 /* --- Classe Utilitária para Ocultar (sem alterações) --- */
 .hidden { display: none !important; }
 
-/* --- Barra de Ações e Contentor (sem alterações) --- */
-#bottom-action-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 80px; display: flex; justify-content: center; align-items: center; box-sizing: border-box; z-index: 20; }
+/* --- Barra de Ações (com ajuste de ordem) --- */
+#bottom-action-bar {
+    position: static; /* Remove o posicionamento absoluto */
+    width: 100%;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    z-index: 20;
+    order: 3; /* Fica no fim da ordem flex */
+}
 
 #button-container {
     height: 100%;
+    width: 100%;
     display: flex;
     justify-content: space-around;
     align-items: center;
-    gap: 8px; /* JS irá usar este valor no cálculo */
-    padding: 0 10px; /* JS irá usar este valor no cálculo */
+    gap: 8px;
+    padding: 0 10px;
     box-sizing: border-box;
     background: rgba(0,0,0,0.7);
     border-top: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 5px 5px 0 0;
 }
 
 /* --- Estilo UNIFICADO para TODOS os botões da barra --- */
@@ -42,7 +90,7 @@ canvas { display: block; background: #1a1a1a; }
     justify-content: center;
     align-items: center;
     min-width: 0;
-    /* O font-size será definido dinamicamente por JavaScript */
+    font-size: 1.5em;
 }
 
 /* --- Estilos de Estado (Ativo/Selecionado) --- */

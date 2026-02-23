@@ -9,13 +9,19 @@
 </head>
 <body>
 
-    <div id="hud">
-        <div>Vida: <span id="hp">100</span></div>
-        <div>Ouro: $<span id="gold">500</span></div>
-        <div>Tempo: <span id="timer">00:00</span></div>
+    <!-- HUD do Inimigo (Superior) -->
+    <div id="enemy-hud" class="hud-bar">
+        <div class="hud-item">❤️ <span id="enemy-hp">100</span></div>
+        <div class="hud-item">💰 <span id="enemy-gold">500</span></div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
+
+    <!-- HUD do Jogador (Inferior) -->
+    <div id="player-hud" class="hud-bar">
+        <div class="hud-item">❤️ <span id="player-hp">100</span></div>
+        <div class="hud-item">💰 <span id="player-gold">500</span></div>
+    </div>
 
     <div id="bottom-action-bar">
         <div id="button-container">
