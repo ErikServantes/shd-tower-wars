@@ -1,0 +1,72 @@
+
+{
+  "archer": {
+    "name": "Torre de Arqueiro",
+    "description": "Uma torre versátil com bom alcance e cadência de tiro.",
+    "levels": [
+      {
+        "level": 1,
+        "name": "Torre de Arqueiro Nv. 1",
+        "cost": 100,
+        "damage": 10,
+        "range": 150,
+        "fireRate": 1,
+        "asset": "assets/towers/archer_1.png"
+      },
+      {
+        "level": 2,
+        "name": "Torre de Balista Nv. 2",
+        "cost": 150,
+        "damage": 22,
+        "range": 170,
+        "fireRate": 1.1,
+        "asset": "assets/towers/archer_2.png"
+      },
+      {
+        "level": 3,
+        "name": "Torre de Canhão Nv. 3",
+        "cost": 250,
+        "damage": 40,
+        "range": 200,
+        "fireRate": 1.2,
+        "asset": "assets/towers/archer_3.png"
+      }
+    ]
+  },
+  "mage": {
+    "name": "Torre de Mago",
+    "description": "Causa dano em área e abranda os inimigos.",
+    "levels": [
+      {
+        "level": 1,
+        "name": "Torre de Mago Nv. 1",
+        "cost": 120,
+        "damage": 8,
+        "range": 130,
+        "fireRate": 0.8,
+        "special": "splash_slow",
+        "asset": "assets/towers/mage_1.png"
+      },
+      {
+        "level": 2,
+        "name": "Torre de Arcano Nv. 2",
+        "cost": 200,
+        "damage": 15,
+        "range": 150,
+        "fireRate": 0.9,
+        "special": "splash_slow",
+        "asset": "assets/towers/mage_2.png"
+      },
+      {
+        "level": 3,
+        "name": "Torre de Arquimago Nv. 3",
+        "cost": 320,
+        "damage": 28,
+        "range": 180,
+        "fireRate": 1.0,
+        "special": "splash_freeze",
+        "asset": "assets/towers/mage_3.png"
+      }
+    ]
+  }
+}

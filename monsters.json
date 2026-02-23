@@ -1,0 +1,69 @@
+
+{
+  "goblin": {
+    "name": "Goblin Básico",
+    "description": "Rápido mas frágil. Ideal para sobrecarregar defesas iniciais.",
+    "levels": [
+      {
+        "level": 1,
+        "name": "Goblin",
+        "cost": 25, 
+        "health": 100,
+        "speed": 90,
+        "reward": 5, 
+        "asset": "assets/monsters/goblin_1.png"
+      },
+      {
+        "level": 2,
+        "name": "Goblin Lanceiro",
+        "cost": 40,
+        "health": 150,
+        "speed": 95,
+        "reward": 8, 
+        "asset": "assets/monsters/goblin_2.png"
+      },
+      {
+        "level": 3,
+        "name": "Hobgoblin",
+        "cost": 70,
+        "health": 250,
+        "speed": 85,
+        "reward": 15,
+        "asset": "assets/monsters/goblin_3.png"
+      }
+    ]
+  },
+  "orc": {
+    "name": "Orc Guerreiro",
+    "description": "Lento mas resistente, capaz de absorver muito dano.",
+    "levels": [
+      {
+        "level": 1,
+        "name": "Orc Grunt",
+        "cost": 50,
+        "health": 300,
+        "speed": 60,
+        "reward": 10,
+        "asset": "assets/monsters/orc_1.png"
+      },
+      {
+        "level": 2,
+        "name": "Orc Berserker",
+        "cost": 80,
+        "health": 450,
+        "speed": 65,
+        "reward": 18,
+        "asset": "assets/monsters/orc_2.png"
+      },
+      {
+        "level": 3,
+        "name": "Orc Juggernaut",
+        "cost": 130,
+        "health": 700,
+        "speed": 55,
+        "reward": 30,
+        "asset": "assets/monsters/orc_3.png"
+      }
+    ]
+  }
+}

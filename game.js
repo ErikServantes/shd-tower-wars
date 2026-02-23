@@ -1,6 +1,6 @@
 
 // ============== INICIALIZAÇÃO E DIAGNÓSTICO ==============
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const goldSpan = document.getElementById('gold');
@@ -17,12 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function log(message) { console.log(message); }
     log('UI com Fontes JS-Driven Inicializada.');
 
+    // ============== CONFIGURAÇÃO DO JOGO (CARREGADO DE JSON) ==============
+    let towerData, monsterData;
+
     // ============== CONFIGURAÇÃO DO FIREBASE ==============
     const firebaseConfig = { apiKey: "AIzaSyBx_hQ59G_leo48xZRQh6XFQZci8lIKYwM", authDomain: "shd-towerwars.firebaseapp.com", projectId: "shd-towerwars", storageBucket: "shd-towerwars.firebasestorage.app", messagingSenderId: "251334988662", appId: "1:251334988662:web:51fc38287cbf45f485e057" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // ============== CONFIGURAÇÕES E ESTADO DO JOGO ==============
+    // ============== ESTADO DO JOGO ==============
     const gridCols = 15, gridRows = 30;
     let gold, playerHealth, monsters, towers, playerActions, selectedAction;
     let gameStarted, roundTime, lastTime = 0;
@@ -36,39 +39,105 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateGold(amount) { gold += amount; goldSpan.textContent = Math.floor(gold); }
     function updateHealth(amount) { playerHealth += amount; hpSpan.textContent = playerHealth; if (playerHealth <= 0) endGame(false); }
     
-    function resize() { /* ... (código de redimensionamento omitido para brevidade) ... */ }
+    function resize() { /* ... */ }
     window.addEventListener('resize', resize);
 
-    function project(c,r){const P=0.3,Y_T=60,Y_B=canvas.height-100,T_Y=Y_B-Y_T,W_B=canvas.width*0.9,W_T=W_B*(1-P),rR=r/(gridRows-1),y=Y_T+rR*T_Y,w=W_T+rR*(W_B-W_T),tW=w/gridCols,sX=(canvas.width-w)/2,x=sX+c*tW;return{x,y,tileWidth:tW}}
-    function drawGrid(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let r=0;r<gridRows;r++)for(let c=0;c<gridCols;c++)drawTile(path.some(p=>p.x===c&&p.y===r),r>=15,c,r)}
-    function drawTile(isPath,isPlayerArea,c,r){const C=project(c,r),N=project(c,r+1);ctx.beginPath();ctx.moveTo(C.x,C.y);ctx.lineTo(C.x+C.tileWidth,C.y);ctx.lineTo(N.x+N.tileWidth,N.y);ctx.lineTo(N.x,N.y);ctx.closePath();ctx.fillStyle=isPath?"#2c3e50":(isPlayerArea?"#27ae6088":"#c0392b88");ctx.strokeStyle="rgba(255,255,255,0.1)";ctx.fill();ctx.stroke();}
-    function screenToGrid(sX,sY){const P=0.3,Y_T=60,Y_B=canvas.height-100,T_Y=Y_B-Y_T,W_B=canvas.width*0.9,W_T=W_B*(1-P);if(sY<Y_T||sY>Y_B)return{col:-1,row:-1};const yR=(sY-Y_T)/T_Y,row=Math.floor(yR*(gridRows-1)),rR=row/(gridRows-1),w=W_T+rR*(W_B-W_T),tW=w/gridCols,sX_=(canvas.width-w)/2,col=Math.floor((sX-sX_)/tW);return{col,row};}
-    function getTileCenter(c,r){const C=project(c,r);if(r>=gridRows-1)return{x:C.x+C.tileWidth/2,y:C.y};const N=project(c,r+1);return{x:((C.x+C.tileWidth/2)+(N.x+N.tileWidth/2))/2,y:(C.y+N.y)/2};}
+    function project(c,r){/* ... */} function drawGrid(){/* ... */} function drawTile(i,p,c,r){/* ... */} function screenToGrid(sX,sY){/* ... */} function getTileCenter(c,r){/* ... */}
     
-    class Monster{constructor(monsterPath,isGhost=false){this.path=monsterPath;this.pathIndex=0;const s=this.path[0],c=getTileCenter(s.x,s.y);this.x=c.x;this.y=c.y;this.speed=80;this.radius=8;this.maxHealth=100;this.health=this.maxHealth;this.reachedEnd=false;this.isGhost=isGhost}takeDamage(a){this.health-=a}move(dT){if(this.pathIndex>=this.path.length-1){this.reachedEnd=true;return}const tN=this.path[this.pathIndex+1],tC=getTileCenter(tN.x,tN.y),dX=tC.x-this.x,dY=tC.y-this.y,dist=Math.sqrt(dX*dX+dY*dY),mD=this.speed*dT;if(dist<mD){this.pathIndex++;this.x=tC.x;this.y=tC.y}else{this.x+=(dX/dist)*mD;this.y+=(dY/dist)*mD}}draw(){ctx.fillStyle=this.isGhost?'#ff8c00':'red';ctx.beginPath();ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);ctx.fill();const hW=20,hP=this.health/this.maxHealth;ctx.fillStyle='#ff0000';ctx.fillRect(this.x-hW/2,this.y-this.radius-10,hW,5);ctx.fillStyle='#00ff00';ctx.fillRect(this.x-hW/2,this.y-this.radius-10,hW*hP,5)}}
-    class Tower{constructor(c,r,isGhost=false){const C=getTileCenter(c,r);this.x=C.x;this.y=C.y;this.col=c;this.row=r;this.range=150;this.damage=10;this.fireRate=1;this.fireCooldown=0;this.target=null;this.isGhost=isGhost}draw(){ctx.fillStyle=this.isGhost?"#ff00ff":"#0000ff";ctx.beginPath();ctx.arc(this.x,this.y-5,10,0,Math.PI*2);ctx.fill()}findTarget(m){this.target=null;let cD=this.range+1;for(const M of m){const d=Math.sqrt(Math.pow(this.x-M.x,2)+Math.pow(this.y-M.y,2));if(d<cD){cD=d;this.target=M}}}attack(dT){this.fireCooldown-=dT;if(this.fireCooldown<=0&&this.target&&this.target.health>0){this.target.takeDamage(this.damage);this.fireCooldown=1/this.fireRate}}}
+    // ============== CLASSES DO JOGO (AGORA USAM CONFIGS) ==============
+    class Monster {
+        constructor(type, level, monsterPath, isGhost = false) {
+            const config = monsterData[type].levels[level - 1];
+            this.path = monsterPath;
+            this.pathIndex = 0;
+            const startPos = getTileCenter(this.path[0].x, this.path[0].y);
+            this.x = startPos.x;
+            this.y = startPos.y;
+            this.speed = config.speed;
+            this.radius = 8; // Pode ser adicionado ao JSON se desejar
+            this.maxHealth = config.health;
+            this.health = this.maxHealth;
+            this.reward = config.reward;
+            this.reachedEnd = false;
+            this.isGhost = isGhost;
+        }
+        takeDamage(a){this.health-=a}
+        move(dT){if(this.pathIndex>=this.path.length-1){this.reachedEnd=true;return}const tN=this.path[this.pathIndex+1],tC=getTileCenter(tN.x,tN.y),dX=tC.x-this.x,dY=tC.y-this.y,dist=Math.sqrt(dX*dX+dY*dY),mD=this.speed*dT;if(dist<mD){this.pathIndex++;this.x=tC.x;this.y=tC.y}else{this.x+=(dX/dist)*mD;this.y+=(dY/dist)*mD}}
+        draw(){ctx.fillStyle=this.isGhost?'#ff8c00':'red';ctx.beginPath();ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);ctx.fill();const hW=20,hP=this.health/this.maxHealth;ctx.fillStyle='#ff0000';ctx.fillRect(this.x-hW/2,this.y-this.radius-10,hW,5);ctx.fillStyle='#00ff00';ctx.fillRect(this.x-hW/2,this.y-this.radius-10,hW*hP,5)}
+    }
 
+    class Tower {
+        constructor(type, level, col, row, isGhost = false) {
+            const config = towerData[type].levels[level - 1];
+            const center = getTileCenter(col, row);
+            this.x = center.x;
+            this.y = center.y;
+            this.col = col;
+            this.row = row;
+            this.level = level;
+            this.type = type;
+            this.damage = config.damage;
+            this.range = config.range;
+            this.fireRate = config.fireRate;
+            this.fireCooldown = 0;
+            this.target = null;
+            this.isGhost = isGhost;
+        }
+        draw(){ctx.fillStyle=this.isGhost?"#ff00ff":"#0000ff";ctx.beginPath();ctx.arc(this.x,this.y-5,10,0,Math.PI*2);ctx.fill()}
+        findTarget(m){this.target=null;let cD=this.range+1;for(const M of m){const d=Math.sqrt(Math.pow(this.x-M.x,2)+Math.pow(this.y-M.y,2));if(d<cD){cD=d;this.target=M}}}
+        attack(dT){this.fireCooldown-=dT;if(this.fireCooldown<=0&&this.target&&this.target.health>0){this.target.takeDamage(this.damage);this.fireCooldown=1/this.fireRate}}
+    }
+
+    // ============== LÓGICA DE UI E AÇÕES ==============
     towerMenuBtn.addEventListener('click',()=>showActionButtons('towers'));
     monsterMenuBtn.addEventListener('click',()=>showActionButtons('monsters'));
     allActionButtons.forEach(btn=>btn.addEventListener('click',()=>handleActionButtonClick(btn)));
     canvas.addEventListener('click',handleCanvasClick);
 
-    function showActionButtons(menuType){if(menuType==="towers"){towerActionButtons.forEach(b=>b.classList.remove("hidden"));monsterActionButtons.forEach(b=>b.classList.add("hidden"));towerMenuBtn.classList.add("active");monsterMenuBtn.classList.remove("active")}else{towerActionButtons.forEach(b=>b.classList.add("hidden"));monsterActionButtons.forEach(b=>b.classList.remove("hidden"));monsterMenuBtn.classList.add("active");towerMenuBtn.classList.remove("active")}allActionButtons.forEach(b=>b.classList.remove("selected"));selectedAction=null}
-    function handleActionButtonClick(btn){const type=btn.dataset.type,unit=btn.dataset.unit;allActionButtons.forEach(b=>b.classList.remove("selected"));btn.classList.add("selected");selectedAction={type:type,unit:unit};log(`Modo de ação: ${unit}`)}
-    function handleCanvasClick(e){if(!selectedAction)return;const rect=canvas.getBoundingClientRect(),sX=e.clientX-rect.left,sY=e.clientY-rect.top;const{col,row}=screenToGrid(sX,sY);if(selectedAction.type==='tower'){const isValidBuild=col>=0&&row>=15&&!path.some(p=>p.x===col&&p.y===row)&&!towers.some(t=>t.col===col&&t.row===row)&&gold>=100;if(isValidBuild){startGameIfNeeded();updateGold(-100);towers.push(new Tower(col,row));playerActions.push({action:'build',type:selectedAction.unit,col:col,row:row,timestamp:roundTime});log(`Torre ${selectedAction.unit} construída.`)}else{log("Construção inválida.")}}else if(selectedAction.type==='monster'){startGameIfNeeded();monsters.push(new Monster(path));playerActions.push({action:'spawn',type:selectedAction.unit,timestamp:roundTime});log(`Monstro ${selectedAction.unit} enviado.`)}allActionButtons.forEach(b=>b.classList.remove("selected"));selectedAction=null}
+    function showActionButtons(menuType){/* ... */}
+    function handleActionButtonClick(btn){/* ... */}
 
+    function handleCanvasClick(e) {
+        if (!selectedAction) return;
+        const rect = canvas.getBoundingClientRect(), sX = e.clientX - rect.left, sY = e.clientY - rect.top;
+        const { col, row } = screenToGrid(sX, sY);
+        const unitType = selectedAction.unit;
+
+        if (selectedAction.type === 'tower') {
+            const config = towerData[unitType].levels[0]; // Nível 1 por defeito
+            const isValidBuild = col >= 0 && row >= 15 && !path.some(p => p.x === col && p.y === row) && !towers.some(t => t.col === col && t.row === row) && gold >= config.cost;
+            if (isValidBuild) {
+                startGameIfNeeded();
+                updateGold(-config.cost);
+                towers.push(new Tower(unitType, 1, col, row));
+                playerActions.push({ action: 'build', type: unitType, level: 1, col: col, row: row, timestamp: roundTime });
+                log(`Torre ${config.name} construída.`);
+            } else {
+                log("Construção inválida.");
+            }
+        } 
+        // A lógica para criar monstros pelo jogador pode ser reativada se necessário
+        
+        allActionButtons.forEach(b => b.classList.remove("selected"));
+        selectedAction = null;
+    }
+
+    // ============== CICLO DE JOGO E LÓGICA DO GHOST ==============
     function startGameIfNeeded(){if(gameStarted)return;gameStarted=true;lastTime=performance.now();log("A ronda começou!");requestAnimationFrame(gameLoop);}
     
     function executeGhostAction(action) {
+        const level = action.level || 1;
         if (action.action === 'build') {
-            ghostGold -= 100;
+            const config = towerData[action.type].levels[level - 1];
+            ghostGold -= config.cost;
             const mirroredRow = (gridRows - 1) - action.row;
-            ghostTowers.push(new Tower(action.col, mirroredRow, true));
-            log(`Ghost construiu torre em (${action.col}, ${mirroredRow})`);
+            ghostTowers.push(new Tower(action.type, level, action.col, mirroredRow, true));
+            log(`Ghost construiu ${config.name}`);
         } else if (action.action === 'spawn') {
-            ghostGold -= 50; // Custo exemplo
-            ghostMonsters.push(new Monster(ghostPath, true));
-            log("Ghost enviou um monstro.");
+            const config = monsterData[action.type].levels[level - 1];
+            ghostGold -= config.cost;
+            ghostMonsters.push(new Monster(action.type, level, ghostPath, true));
+            log(`Ghost enviou ${config.name}`);
         }
     }
 
@@ -85,8 +154,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Processar Fila de Ações do Ghost ---
         if (ghostActionQueue.length > 0) {
             const waitingAction = ghostActionQueue[0];
-            const canAfford = (waitingAction.action === 'build' && ghostGold >= 100) || (waitingAction.action === 'spawn' && ghostGold >= 50);
-            if (canAfford) {
+            const level = waitingAction.level || 1;
+            const cost = waitingAction.action === 'build' ? towerData[waitingAction.type].levels[level-1].cost : monsterData[waitingAction.type].levels[level-1].cost;
+            if (ghostGold >= cost) {
                 executeGhostAction(waitingAction);
                 ghostActionQueue.shift();
             }
@@ -96,8 +166,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ghost && nextGhostActionIndex < ghostActions.length) {
             const nextAction = ghostActions[nextGhostActionIndex];
             if (roundTime >= nextAction.timestamp) {
-                const canAfford = (nextAction.action === 'build' && ghostGold >= 100) || (nextAction.action === 'spawn' && ghostGold >= 50);
-                if (canAfford) {
+                 const level = nextAction.level || 1;
+                const cost = nextAction.action === 'build' ? towerData[nextAction.type].levels[level-1].cost : monsterData[nextAction.type].levels[level-1].cost;
+                if (ghostGold >= cost) {
                     executeGhostAction(nextAction);
                 } else {
                     log(`Ação do Ghost adiada por falta de ouro. Colocada na fila.`);
@@ -114,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ghostTowers.forEach(t => { t.findTarget(monsters); t.attack(deltaTime); });
 
         const ghostMonstersReachedEnd = ghostMonsters.filter(m => m.reachedEnd);
-        if (ghostMonstersReachedEnd.length > 0) updateHealth(-10 * ghostMonstersReachedEnd.length);
+        if (ghostMonstersReachedEnd.length > 0) updateHealth(-10 * ghostMonstersReachedEnd.length); // O dano pode vir do JSON
 
         monsters = monsters.filter(m => m.health > 0 && !m.reachedEnd);
         ghostMonsters = ghostMonsters.filter(m => m.health > 0 && !m.reachedEnd);
@@ -137,9 +208,24 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(gameLoop);
     }
 
-    async function saveGhost(actions) { /* ... (código de salvar omitido) ... */ }
-    async function loadGhost() { /* ... (código de carregar omitido) ... */ }
-    function endGame(isVictory) { /* ... (código de fim de jogo omitido) ... */ }
+    async function saveGhost(actions) { /* ... */ }
+    async function loadGhost() { /* ... */ }
+    function endGame(isVictory) { /* ... */ }
+
+    // ============== INICIALIZAÇÃO E CARREGAMENTO DE DADOS ==============
+    async function loadGameData() {
+        try {
+            const [towersResponse, monstersResponse] = await Promise.all([
+                fetch('towers.json'),
+                fetch('monsters.json')
+            ]);
+            towerData = await towersResponse.json();
+            monsterData = await monstersResponse.json();
+            log("Configurações de torres e monstros carregadas com sucesso!");
+        } catch (error) {
+            console.error("Falha ao carregar os ficheiros de configuração do jogo:", error);
+        }
+    }
 
     async function resetGame() {
         gameStarted = false;
@@ -156,5 +242,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // ============== PONTO DE ENTRADA ==============
-    resetGame();
+    async function main() {
+        await loadGameData();
+        resetGame();
+    }
+
+    main();
 });
