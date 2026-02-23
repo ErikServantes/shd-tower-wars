@@ -3,7 +3,7 @@ PROJETO: Echoes of Evolution (Tower Defense Assimétrico)
 ================================================================
 FASES DE IMPLEMENTAÇÃO
 ----------------------------------------------------------------
-Última atualização: 24 de Maio de 2024
+Última atualização: 25 de Maio de 2024
 ----------------------------------------------------------------
 
 ================================================================
@@ -51,14 +51,14 @@ FASE 5: MULTIPLAYER ASSÍNCRONO (GHOST SYSTEM)
 Status: [EM ANDAMENTO]
 ----------------------------------------------------------------
 [x] 5.1 - Sistema de Gravação: Ações de construção e spawn são guardadas num array (`playerActions`).
-[ ] 5.2 - Integração Firebase: Salvar JSON do 'Ghost' vitorioso no Firestore. (PRÓXIMO PASSO)
-[ ] 5.3 - Playback: Carregar e executar as ações do Ghost na metade superior do ecrã do novo jogador.
+[x] 5.2 - Integração Firebase: Salvar JSON do 'Ghost' vitorioso no Firestore.
+[ ] 5.3 - Playback: Carregar e executar as ações do Ghost na metade superior do ecrã do novo jogador. (PRÓXIMO PASSO)
 [ ] 5.4 - Lista de Espera (Determinismo): Garantir que o Ghost executa ações assim que tiver ouro suficiente.
 
 ================================================================
 NOTAS PARA A PRÓXIMA IA (CONTINUAÇÃO DO TRABALHO):
 ================================================================
-- **PROBLEMA CRÍTICO:** O deploy para o Firebase Hosting está a falhar devido a um problema de autenticação do utilizador. A mensagem de erro é "we weren't able to authenticate you". A solução mais provável é instruir o utilizador a recarregar a página do browser (F5) para renovar as suas credenciais de sessão antes de tentar fazer o deploy novamente. NÃO prossigas com novas funcionalidades até o deploy ser bem-sucedido.
+- **PRÓXIMO PASSO SUGERIDO:** A Fase 5.2 está completa. O próximo passo é a **Fase 5.3: Playback**, que consiste em carregar os dados de um 'Ghost' do Firestore e executar as suas ações na metade do ecrã do adversário.
 
 - **DINÂMICA DA NOVA UI (IMPORTANTE):** A UI da barra de ações foi completamente refeita e é controlada por JavaScript para um alinhamento e dimensionamento perfeitos.
   - O `index.html` contém um `<div id="button-container">` que agrupa os 9 botões.
@@ -68,8 +68,6 @@ NOTAS PARA A PRÓXIMA IA (CONTINUAÇÃO DO TRABALHO):
     3. DEFINE o `font-size` dos botões de forma proporcional à largura calculada.
   - O CSS (`style.css`) foi simplificado para apenas estruturar os elementos, deixando o dimensionamento da fonte para o JS.
   - Os botões de menu "T" e "M" foram substituídos pelos ícones "♜" e "♞".
-
-- **PRÓXIMO PASSO SUGERIDO:** Assim que o deploy for resolvido, a Fase 4 está funcionalmente completa. O próximo passo lógico é avançar para a **Fase 5.2: Integração Firebase**, guardando o `playerActions` no Firestore no final de uma ronda vitoriosa.
 
 - Manter o código modular no game.js.
 - Priorizar performance para dispositivos móveis (evitar loops pesados).
