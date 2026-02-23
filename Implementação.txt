@@ -48,29 +48,21 @@ Status: [COMPLETO]
 ================================================================
 FASE 5: MULTIPLAYER ASSÍNCRONO (GHOST SYSTEM)
 ================================================================
-Status: [EM ANDAMENTO]
+Status: [COMPLETO]
 ----------------------------------------------------------------
 [x] 5.1 - Sistema de Gravação: Ações de construção e spawn são guardadas num array (`playerActions`).
 [x] 5.2 - Integração Firebase: Salvar JSON do 'Ghost' vitorioso no Firestore.
-[ ] 5.3 - Playback: Carregar e executar as ações do Ghost na metade superior do ecrã do novo jogador. (PRÓXIMO PASSO)
-[ ] 5.4 - Lista de Espera (Determinismo): Garantir que o Ghost executa ações assim que tiver ouro suficiente.
+[x] 5.3 - Playback: Carregar e executar as ações do Ghost na metade superior do ecrã do novo jogador.
+[x] 5.4 - Lista de Espera (Determinismo): Garantir que o Ghost executa ações assim que tiver ouro suficiente.
 
 ================================================================
-NOTAS PARA A PRÓXIMA IA (CONTINUAÇÃO DO TRABALHO):
+PROJETO CONCLUÍDO
 ================================================================
-- **PRÓXIMO PASSO SUGERIDO:** A Fase 5.2 está completa. O próximo passo é a **Fase 5.3: Playback**, que consiste em carregar os dados de um 'Ghost' do Firestore e executar as suas ações na metade do ecrã do adversário.
-
-- **DINÂMICA DA NOVA UI (IMPORTANTE):** A UI da barra de ações foi completamente refeita e é controlada por JavaScript para um alinhamento e dimensionamento perfeitos.
-  - O `index.html` contém um `<div id="button-container">` que agrupa os 9 botões.
-  - A função `resize()` no `game.js` é o cérebro de tudo:
-    1. Ajusta a largura do `button-container` para corresponder exatamente à base do campo de jogo.
-    2. CALCULA a largura de um único botão com base na largura do contentor, padding e gap.
-    3. DEFINE o `font-size` dos botões de forma proporcional à largura calculada.
-  - O CSS (`style.css`) foi simplificado para apenas estruturar os elementos, deixando o dimensionamento da fonte para o JS.
-  - Os botões de menu "T" e "M" foram substituídos pelos ícones "♜" e "♞".
-
-- Manter o código modular no game.js.
-- Priorizar performance para dispositivos móveis (evitar loops pesados).
-- As torres e unidades devem usar o estilo de Mix Tecnológico (Medieval/Steam/Futuro).
-- Sempre que completar uma tarefa, marcar com [x] (completo) ou [~] (parcial) neste ficheiro.
+- Todas as fases de implementação definidas foram concluídas com sucesso.
+- O ciclo de jogo assimétrico, incluindo a gravação e o playback de "Ghosts" via Firebase, está totalmente funcional.
+- **Próximos Passos Sugeridos:**
+  - Adicionar mais tipos de torres e monstros.
+  - Implementar um sistema de seleção de "Ghosts" em vez de carregar sempre o último.
+  - Melhorar os gráficos e adicionar efeitos sonoros.
+  - Balancear os custos, dano e vida das unidades.
 ================================================================
