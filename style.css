@@ -1,78 +1,54 @@
-/* Ficheiro CSS para Echoes of Evolution - v5 (Grelha Robusta) */
+/* Ficheiro CSS para Echoes of Evolution - v8 (JS-Driven Fonts) */
 
-/* --- Configuração Geral e Letterboxing (sem alterações) --- */
+/* --- Configuração Geral (sem alterações) --- */
 body { margin: 0; padding: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; display: flex; align-items: center; justify-content: center; height: 100vh; }
 canvas { display: block; background: #1a1a1a; }
 
 /* --- HUD Superior (sem alterações) --- */
 #hud { position: absolute; top: 0; left: 0; width: 100%; padding: 10px 20px; display: flex; justify-content: space-between; pointer-events: none; background: linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0)); box-sizing: border-box; z-index: 10; }
 
-/* --- Classe Utilitária para Ocultar --- */
-.hidden {
-    display: none !important; /* Garante que o botão é removido do layout */
-}
+/* --- Classe Utilitária para Ocultar (sem alterações) --- */
+.hidden { display: none !important; }
 
-/* --- Barra de Ações com Grelha Flexbox Robusta --- */
-#bottom-action-bar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 80px;
+/* --- Barra de Ações e Contentor (sem alterações) --- */
+#bottom-action-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 80px; display: flex; justify-content: center; align-items: center; box-sizing: border-box; z-index: 20; }
+
+#button-container {
+    height: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 8px; /* JS irá usar este valor no cálculo */
+    padding: 0 10px; /* JS irá usar este valor no cálculo */
+    box-sizing: border-box;
     background: rgba(0,0,0,0.7);
     border-top: 1px solid rgba(255, 255, 255, 0.2);
-    
-    /* Flexbox para distribuir TODOS os botões visíveis */
-    display: flex;
-    justify-content: space-around; /* Distribuição uniforme */
-    align-items: center;
-    padding: 0 10px;
-    gap: 8px; /* Espaço consistente entre os botões */
-    box-sizing: border-box;
-    z-index: 20;
+    border-radius: 5px 5px 0 0;
 }
 
 /* --- Estilo UNIFICADO para TODOS os botões da barra --- */
 .menu-btn, .action-btn {
-    /* Flexbox para preencher o espaço de forma inteligente */
-    flex-grow: 1; /* Permite que o botão cresça */
-    flex-basis: 0; /* Base de tamanho zero para distribuição perfeitamente igual */
-
-    /* Aparência uniforme */
-    height: 60px; 
+    flex-grow: 1;
+    flex-basis: 0;
+    height: 55px;
     background-color: #34495e;
     border: 2px solid #7f8c8d;
-    border-radius: 10px;
+    border-radius: 8px;
     color: white;
     font-weight: bold;
-    font-size: 22px;
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
-    
-    /* Centrar o texto (T, 1, A, etc.) */
     display: flex;
     justify-content: center;
     align-items: center;
+    min-width: 0;
+    /* O font-size será definido dinamicamente por JavaScript */
 }
 
 /* --- Estilos de Estado (Ativo/Selecionado) --- */
-
-/* Botão de menu ATIVO (T ou M) */
-.menu-btn.active {
-    background-color: #e67e22;
-    border-color: #f39c12;
-}
-
-/* Botão de ação SELECIONADO (1-7 ou A-G) */
-.action-btn.selected {
-    background-color: #c0392b;
-    border-color: #e74c3c;
-}
-
-/* Efeito Hover para todos os botões */
-.menu-btn:hover, .action-btn:hover {
-    background-color: #4a627a;
-}
+.menu-btn.active { background-color: #e67e22; border-color: #f39c12; }
+.action-btn.selected { background-color: #c0392b; border-color: #e74c3c; }
+.menu-btn:hover, .action-btn:hover { background-color: #4a627a; }
 
 /* --- Consola de Debug (Oculta) --- */
 #debug-console, #copy-log-btn { display: none; }

@@ -17,31 +17,33 @@
 
     <canvas id="gameCanvas"></canvas>
 
-    <!-- Barra de Ações Simplificada - Todos os botões são filhos diretos -->
+    <!-- A barra principal agora serve para centrar o contentor dos botões -->
     <div id="bottom-action-bar">
-        
-        <button id="tower-menu-btn" class="menu-btn">T</button>
+        <div id="button-container">
+            <!-- Botão de Torres com Ícone -->
+            <button id="tower-menu-btn" class="menu-btn">♜</button>
 
-        <!-- Botões de Ação de Torre -->
-        <button class="action-btn tower-action" data-type="tower" data-unit="siege_ballista">1</button>
-        <button class="action-btn tower-action" data-type="tower" data-unit="catapult">2</button>
-        <button class="action-btn tower-action" data-type="tower" data-unit="oil_cauldron">3</button>
-        <button class="action-btn tower-action" data-type="tower" data-unit="tesla_cannon">4</button>
-        <button class="action-btn tower-action" data-type="tower" data-unit="steam_mortar">5</button>
-        <button class="action-btn tower-action" data-type="tower" data-unit="prism_tower">6</button>
-        <button class="action-btn tower-action" data-type="tower" data-unit="pulse_cannon">7</button>
+            <!-- Botões de Ação de Torre -->
+            <button class="action-btn tower-action" data-type="tower" data-unit="siege_ballista">1</button>
+            <button class="action-btn tower-action" data-type="tower" data-unit="catapult">2</button>
+            <button class="action-btn tower-action" data-type="tower" data-unit="oil_cauldron">3</button>
+            <button class="action-btn tower-action" data-type="tower" data-unit="tesla_cannon">4</button>
+            <button class="action-btn tower-action" data-type="tower" data-unit="steam_mortar">5</button>
+            <button class="action-btn tower-action" data-type="tower" data-unit="prism_tower">6</button>
+            <button class="action-btn tower-action" data-type="tower" data-unit="pulse_cannon">7</button>
 
-        <!-- Botões de Ação de Monstro -->
-        <button class="action-btn monster-action hidden" data-type="monster" data-unit="goblin">A</button>
-        <button class="action-btn monster-action hidden" data-type="monster" data-unit="orc">B</button>
-        <button class="action-btn monster-action hidden" data-type="monster" data-unit="ogre">C</button>
-        <button class="action-btn monster-action hidden" data-type="monster" data-unit="drake">D</button>
-        <button class="action-btn monster-action hidden" data-type="monster" data-unit="golem">E</button>
-        <button class="action-btn monster-action hidden" data-type="monster" data-unit="spectre">F</button>
-        <button class="action-btn monster-action hidden" data-type="monster" data-unit="behemoth">G</button>
+            <!-- Botões de Ação de Monstro -->
+            <button class="action-btn monster-action hidden" data-type="monster" data-unit="goblin">A</button>
+            <button class="action-btn monster-action hidden" data-type="monster" data-unit="orc">B</button>
+            <button class="action-btn monster-action hidden" data-type="monster" data-unit="ogre">C</button>
+            <button class="action-btn monster-action hidden" data-type="monster" data-unit="drake">D</button>
+            <button class="action-btn monster-action hidden" data-type="monster" data-unit="golem">E</button>
+            <button class="action-btn monster-action hidden" data-type="monster" data-unit="spectre">F</button>
+            <button class="action-btn monster-action hidden" data-type="monster" data-unit="behemoth">G</button>
 
-        <button id="monster-menu-btn" class="menu-btn">M</button>
-
+            <!-- Botão de Monstros com Ícone -->
+            <button id="monster-menu-btn" class="menu-btn">♞</button>
+        </div>
     </div>
 
     <!-- CONSOLA DE DEBUG -->
