@@ -59,16 +59,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     function startGameIfNeeded() {
         if (gameStarted) return;
         gameStarted = true;
+        // Apenas inicia o loop. O loop em si vai gerir o seu próprio tempo.
         requestAnimationFrame(gameLoop);
     }
 
     function gameLoop(timestamp) {
         if (!gameStarted) return;
 
-        // CORREÇÃO: Lida com a inicialização do tempo no primeiro frame para evitar dT gigante
+        // CORREÇÃO ROBUSTA: Ignora o primeiro frame para garantir que dT é sempre válido.
         if (lastTime === 0) {
             lastTime = timestamp;
+            requestAnimationFrame(gameLoop);
+            return;
         }
+
         const dT = (timestamp - lastTime) / 1000;
         lastTime = timestamp;
 
