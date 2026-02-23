@@ -55,9 +55,63 @@ document.addEventListener('DOMContentLoaded', async () => {
     function handleCanvasClick(e){if(!selectedAction||'tower'!==selectedAction.type)return;const rect=canvas.getBoundingClientRect(),sX=e.clientX-rect.left,sY=e.clientY-rect.top,{col,row}=screenToGrid(sX,sY);if(col<0||row<0)return;const unitType=selectedAction.unit,level=1,config=towerData[unitType].levels[level-1];playerGold>=config.cost&&row>=15&&!ghostPath.some(p=>p.x===col&&p.y===row)&&!towers.some(t=>t.col===col&&t.row===row)&&(startGameIfNeeded(),updatePlayerGold(-config.cost),towers.push(new Tower(unitType,level,col,row)),playerActions.push({action:'build',type:unitType,level:level,col:col,row:row,timestamp:roundTime}))}
     function updateActionButtons(){document.querySelectorAll(".action-btn").forEach(btn=>{const t=btn.dataset.unit,e=btn.dataset.type,o='tower'===e?towerData:monsterData,n=btn.querySelector(".unit-symbol"),s=btn.querySelector(".unit-cost");n&&(n.textContent=''),s&&(s.textContent=''),o&&o[t]&&o[t].levels&&o[t].levels[0]&&(n&&(n.textContent=o[t].symbol||""),s&&(s.textContent=`$${o[t].levels[0].cost}`))})}function showActionButtons(t){const e='towers'===t;document.querySelectorAll(".tower-action").forEach(t=>t.classList.toggle("hidden",!e)),document.querySelectorAll(".monster-action").forEach(t=>t.classList.toggle("hidden",e)),towerMenuBtn.classList.toggle("active",e),monsterMenuBtn.classList.toggle("active",!e),selectedAction&&(selectedAction.button.classList.remove("selected"),selectedAction=null)}
 
-    // ============== CICLO DE JOGO ==============
-    function startGameIfNeeded(){if(gameStarted)return;gameStarted=!0,lastTime=performance.now(),requestAnimationFrame(gameLoop)}
-    function gameLoop(timestamp){if(!gameStarted)return;const dT=(timestamp-lastTime)/1e3;lastTime=timestamp,roundTime+=dT,updatePlayerGold(1*dT),ghost&&updateGhostGold(1*dT);if(ghost&&nextGhostActionIndex!==-1)for(;nextGhostActionIndex<ghostActions.length&&roundTime>=ghostActions[nextGhostActionIndex].timestamp;){const action=ghostActions[nextGhostActionIndex];'spawn'===action.action?spawnGhostMonster(action.type,action.level):'build'===action.action&&buildGhostTower(action.type,action.level,action.col,action.row),nextGhostActionIndex++}monsters.forEach(m=>m.move(dT)),ghostMonsters.forEach(m=>m.move(dT)),towers.forEach(t=>{t.findTarget(ghostMonsters),t.attack(dT)}),ghostTowers.forEach(t=>{t.findTarget(monsters),t.attack(dT)});const pMRE=monsters.filter(m=>m.reachedEnd);pMRE.length>0&&updateGhostHealth(-10*pMRE.length);const gMRE=ghostMonsters.filter(m=>m.reachedEnd);gMRE.length>0&&updatePlayerHealth(-10*gMRE.length),monsters=monsters.filter(m=>m.health>0&&!m.reachedEnd),ghostMonsters=ghostMonsters.filter(m=>m.health>0&&!m.reachedEnd),drawGrid(),towers.forEach(t=>t.draw()),ghostTowers.forEach(t=>t.draw()),monsters.forEach(m=>m.draw()),ghostMonsters.forEach(m=>m.draw()),ghost&&nextGhostActionIndex>=ghostActions.length&&0===monsters.length&&0===ghostMonsters.length&&endGame(!0),requestAnimationFrame(gameLoop)}
+    // ============== CICLO DE JOGO (CORRIGIDO) ==============
+    function startGameIfNeeded() {
+        if (gameStarted) return;
+        gameStarted = true;
+        requestAnimationFrame(gameLoop);
+    }
+
+    function gameLoop(timestamp) {
+        if (!gameStarted) return;
+
+        // CORREÇÃO: Lida com a inicialização do tempo no primeiro frame para evitar dT gigante
+        if (lastTime === 0) {
+            lastTime = timestamp;
+        }
+        const dT = (timestamp - lastTime) / 1000;
+        lastTime = timestamp;
+
+        roundTime += dT;
+        updatePlayerGold(1 * dT);
+        if (ghost) updateGhostGold(1 * dT);
+
+        if (ghost && nextGhostActionIndex !== -1) {
+            while (nextGhostActionIndex < ghostActions.length && roundTime >= ghostActions[nextGhostActionIndex].timestamp) {
+                const action = ghostActions[nextGhostActionIndex];
+                if (action.action === 'spawn') {
+                    spawnGhostMonster(action.type, action.level);
+                } else if (action.action === 'build') {
+                    buildGhostTower(action.type, action.level, action.col, action.row);
+                }
+                nextGhostActionIndex++;
+            }
+        }
+
+        monsters.forEach(m => m.move(dT));
+        ghostMonsters.forEach(m => m.move(dT));
+        towers.forEach(t => { t.findTarget(ghostMonsters); t.attack(dT); });
+        ghostTowers.forEach(t => { t.findTarget(monsters); t.attack(dT); });
+
+        const pMRE = monsters.filter(m => m.reachedEnd);
+        if (pMRE.length > 0) updateGhostHealth(-10 * pMRE.length);
+        const gMRE = ghostMonsters.filter(m => m.reachedEnd);
+        if (gMRE.length > 0) updatePlayerHealth(-10 * gMRE.length);
+
+        monsters = monsters.filter(m => m.health > 0 && !m.reachedEnd);
+        ghostMonsters = ghostMonsters.filter(m => m.health > 0 && !m.reachedEnd);
+
+        drawGrid();
+        towers.forEach(t => t.draw());
+        ghostTowers.forEach(t => t.draw());
+        monsters.forEach(m => m.draw());
+        ghostMonsters.forEach(m => m.draw());
+
+        if (ghost && nextGhostActionIndex >= ghostActions.length && monsters.length === 0 && ghostMonsters.length === 0) {
+            endGame(true);
+        }
+        requestAnimationFrame(gameLoop);
+    }
 
     // ============== FUNÇÕES DE ESTADO DO JOGO ==============
     async function loadGameData(){try{const t=`?v=${(new Date).getTime()}`,[e,o]=await Promise.all([fetch(`towers.json${t}`),fetch(`monsters.json${t}`)]);towerData=await e.json(),monsterData=await o.json(),log("Dados de Torres e Monstros carregados.")}catch(t){log(`Erro ao carregar dados do jogo: ${t}`)}}
