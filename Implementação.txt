@@ -1,68 +1,50 @@
 ================================================================
 PROJETO: Echoes of Evolution (Tower Defense Assimétrico)
 ================================================================
-FASES DE IMPLEMENTAÇÃO
-----------------------------------------------------------------
-Última atualização: 25 de Maio de 2024
+Última atualização: 26 de Maio de 2024
+Status do Projeto: [EM DESENVOLVIMENTO]
 ----------------------------------------------------------------
 
 ================================================================
-FASE 1: FUNDAÇÃO E CENÁRIO (Grelha de Perspetiva)
+REGRAS FUNDAMENTAIS (A CONSTITUIÇÃO DO JOGO)
 ================================================================
-Status: [COMPLETO]
+Estas são as bases do jogo. Alterações aqui devem ser bem ponderadas.
+
+1.  **Jogabilidade Assimétrica:** A partida de um jogador ("Player") é gravada e torna-se o desafio para o próximo jogador na forma de um "Ghost".
+2.  **Tabuleiro Unificado:** O jogo ocorre numa única grelha 15x30, dividida verticalmente. O jogador atua na metade inferior (linhas 15-29) e o Ghost na metade superior (linhas 0-14).
+3.  **Caminhos Espelhados:** O caminho que os monstros do jogador percorrem é o exato inverso do caminho dos monstros do Ghost.
+4.  **Economia Simétrica:** Ambos, Player e Ghost, começam com os mesmos recursos (Ouro e Vida) e ganham ouro passivamente à mesma taxa.
+5.  **Ghost Determinista:** As ações do Ghost (construir, spawnar) são executadas com base no tempo de jogo (`roundTime`) em que foram originalmente gravadas, garantindo consistência.
+6.  **Início por Ação:** O cronómetro da partida e a primeira ação do Ghost só são despoletados quando o jogador realiza a sua primeira ação (construir ou spawnar).
+7.  **Condição de Vitória/Derrota:**
+    - O Jogador **VENCE** se sobreviver a todas as ações do Ghost e eliminar todos os seus monstros.
+    - O Jogador **PERDE** se a sua vida chegar a zero.
+8.  **O Ciclo Evolutivo:** No final da partida, o registo de ações do jogador é guardado no Firebase, tornando-se o novo Ghost a ser enfrentado.
+
 ----------------------------------------------------------------
-[x] 1.1 - Setup Inicial: Estrutura de ficheiros (HTML, CSS, JS).
-[x] 1.2 - Grelha de Jogo: Desenho de uma grelha 15x30.
-[x] 1.3 - Projeção de Perspetiva: Implementada a transformação visual.
-[x] 1.4 - Desenho de Tiles: Diferenciação visual entre zona de construção e caminho dos monstros.
 
 ================================================================
-FASE 2: MECÂNICAS BÁSICAS (TORRES E MONSTROS)
+FASE 6: MELHORIAS VISUAIS E DE CLAREZA
 ================================================================
-Status: [COMPLETO]
+Status: [EM PROGRESSO]
 ----------------------------------------------------------------
-[x] 2.1 - Construção de Torres: O jogador pode clicar para construir torres na zona permitida.
-[x] 2.2 - Movimento de Monstros: Monstros seguem um caminho predefinido (path).
-[x] 2.3 - Lógica de Ataque: Torres detetam e atacam monstros dentro do alcance.
-[x] 2.4 - Saúde e Dano: Monstros têm vida e são removidos ao chegar a zero. Monstros que chegam ao fim causam dano ao jogador.
+[x] 6.1 - **Sistema de Pré-visualização de Construção:**
+    - Objetivo: Melhorar a experiência de construção de torres.
+    - Implementação: Ao selecionar uma torre no menu, uma "torre fantasma" fica presa ao cursor, exibindo o seu raio de alcance. A cor da torre e da aura muda para azul em locais válidos e vermelho em locais inválidos. A construção é cancelável com a tecla 'ESC'. A aura de alcance de torres já construídas aparece ao passar o rato por cima.
+
+[ ] 6.2 - **Feedback de Disparo das Torres:**
+    - Objetivo: Criar um efeito visual (ex: uma pequena partícula ou linha) que viaja da torre até ao monstro alvo a cada disparo.
+
+[ ] 6.3 - **Diferenciação de Unidades por Cor:**
+    - Objetivo: Alterar a cor das torres e monstros para que as unidades do jogador e do Ghost sejam imediatamente distinguíveis.
+      - Sugestão: Unidades do jogador em tons de azul/verde; Unidades do Ghost em tons de vermelho/roxo.
 
 ================================================================
-FASE 3: INTERFACE DE UTILIZADOR (UI) BÁSICA
+FASES CONCLUÍDAS (Histórico)
 ================================================================
-Status: [COMPLETO]
-----------------------------------------------------------------
-[x] 3.1 - HUD Superior: Exibição de Vida, Ouro e Tempo.
-[x] 3.2 - Painel de Ações Fixo: Barra inferior com botões para alternar entre menu de torres (T) e monstros (M).
-[x] 3.3 - Seleção de Ação: Feedback visual para o botão selecionado.
 
-================================================================
-FASE 4: CICLO DE JOGO E REGRAS
-================================================================
-Status: [COMPLETO]
-----------------------------------------------------------------
-[x] 4.1 - Ciclo de Ouro: Implementada renda de ouro passiva (1 ouro/seg).
-[x] 4.2 - Gestor de Tempo: Implementado cronómetro de ronda e lógica de fim de ronda (vitória/derrota).
-[x] 4.3 - UI de Ações (Grelha Dinâmica): Implementada uma barra de ações alinhada com o campo de jogo, com 9 botões de tamanho uniforme e fontes que se ajustam dinamicamente via JavaScript.
-[x] 4.4 - Início de Ronda Dinâmico: A ronda agora começa automaticamente com a primeira ação do jogador (construir torre ou enviar monstro).
-
-================================================================
-FASE 5: MULTIPLAYER ASSÍNCRONO (GHOST SYSTEM)
-================================================================
-Status: [COMPLETO]
-----------------------------------------------------------------
-[x] 5.1 - Sistema de Gravação: Ações de construção e spawn são guardadas num array (`playerActions`).
-[x] 5.2 - Integração Firebase: Salvar JSON do 'Ghost' vitorioso no Firestore.
-[x] 5.3 - Playback: Carregar e executar as ações do Ghost na metade superior do ecrã do novo jogador.
-[x] 5.4 - Lista de Espera (Determinismo): Garantir que o Ghost executa ações assim que tiver ouro suficiente.
-
-================================================================
-PROJETO CONCLUÍDO
-================================================================
-- Todas as fases de implementação definidas foram concluídas com sucesso.
-- O ciclo de jogo assimétrico, incluindo a gravação e o playback de "Ghosts" via Firebase, está totalmente funcional.
-- **Próximos Passos Sugeridos:**
-  - Adicionar mais tipos de torres e monstros.
-  - Implementar um sistema de seleção de "Ghosts" em vez de carregar sempre o último.
-  - Melhorar os gráficos e adicionar efeitos sonoros.
-  - Balancear os custos, dano e vida das unidades.
-================================================================
+FASE 1: FUNDAÇÃO E CENÁRIO [COMPLETO]
+FASE 2: MECÂNICAS BÁSICAS (TORRES E MONSTROS) [COMPLETO]
+FASE 3: INTERFACE DE UTILIZADOR (UI) BÁSICA [COMPLETO]
+FASE 4: CICLO DE JOGO E REGRAS [COMPLETO]
+FASE 5: MULTIPLAYER ASSÍNCRONO (GHOST SYSTEM) [COMPLETO]
