@@ -5,58 +5,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Echoes of Evolution</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=1.1"> <!-- Cache Busting -->
 </head>
 <body>
 
-    <!-- HUD do Inimigo (Superior) -->
-    <div id="enemy-hud" class="hud-bar">
-        <div class="hud-item">❤️ <span id="enemy-hp">100</span></div>
-        <div class="hud-item">💰 <span id="enemy-gold">500</span></div>
-    </div>
+    <div id="app-container">
+        <!-- HUD do Inimigo (Superior) -->
+        <div id="enemy-hud" class="hud-bar">
+            <div class="hud-item">❤️ <span id="enemy-hp">100</span></div>
+            <div class="hud-item">💰 <span id="enemy-gold">500</span></div>
+        </div>
 
-    <canvas id="gameCanvas"></canvas>
+        <canvas id="gameCanvas"></canvas>
 
-    <!-- HUD do Jogador (Inferior) -->
-    <div id="player-hud" class="hud-bar">
-        <div class="hud-item">❤️ <span id="player-hp">100</span></div>
-        <div class="hud-item">💰 <span id="player-gold">500</span></div>
-    </div>
+        <div id="bottom-ui-container">
+            <!-- HUD do Jogador (Inferior) -->
+            <div id="player-hud" class="hud-bar">
+                <div class="hud-item">❤️ <span id="player-hp">100</span></div>
+                <div class="hud-item">💰 <span id="player-gold">500</span></div>
+            </div>
 
-    <div id="bottom-action-bar">
-        <div id="button-container">
-            <button id="tower-menu-btn" class="menu-btn">♜</button>
+            <!-- Barra de Ações -->
+            <div id="bottom-action-bar">
+                <div id="button-container">
+                    <button id="tower-menu-btn" class="menu-btn">♜</button>
 
-            <!-- 7 Botões de Torre -->
-            <button class="action-btn tower-action" data-type="tower" data-unit="archer"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
-            <button class="action-btn tower-action" data-type="tower" data-unit="mage"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
-            <button class="action-btn tower-action" data-type="tower" data-unit="t3"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
-            <button class="action-btn tower-action" data-type="tower" data-unit="t4"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
-            <button class="action-btn tower-action" data-type="tower" data-unit="t5"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
-            <button class="action-btn tower-action" data-type="tower" data-unit="t6"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
-            <button class="action-btn tower-action" data-type="tower" data-unit="t7"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
+                    <!-- 7 Botões de Torre -->
+                    <button class="action-btn tower-action" data-type="tower" data-unit="archer"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
+                    <button class="action-btn tower-action" data-type="tower" data-unit="mage"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
+                    <button class="action-btn tower-action" data-type="tower" data-unit="t3"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
+                    <button class="action-btn tower-action" data-type="tower" data-unit="t4"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
+                    <button class="action-btn tower-action" data-type="tower" data-unit="t5"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
+                    <button class="action-btn tower-action" data-type="tower" data-unit="t6"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
+                    <button class="action-btn tower-action" data-type="tower" data-unit="t7"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
 
-            <!-- 7 Botões de Monstro (Escondidos) -->
-            <button class="action-btn monster-action hidden" data-type="monster" data-unit="goblin"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
-            <button class="action-btn monster-action hidden" data-type="monster" data-unit="orc"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
-            <button class="action-btn monster-action hidden" data-type="monster" data-unit="m3"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
-            <button class="action-btn monster-action hidden" data-type="monster" data-unit="m4"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
-            <button class="action-btn monster-action hidden" data-type="monster" data-unit="m5"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
-            <button class="action-btn monster-action hidden" data-type="monster" data-unit="m6"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
-            <button class="action-btn monster-action hidden" data-type="monster" data-unit="m7"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
+                    <!-- 7 Botões de Monstro (Escondidos) -->
+                    <button class="action-btn monster-action hidden" data-type="monster" data-unit="goblin"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
+                    <button class="action-btn monster-action hidden" data-type="monster" data-unit="orc"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
+                    <button class="action-btn monster-action hidden" data-type="monster" data-unit="m3"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
+                    <button class="action-btn monster-action hidden" data-type="monster" data-unit="m4"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
+                    <button class="action-btn monster-action hidden" data-type="monster" data-unit="m5"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
+                    <button class="action-btn monster-action hidden" data-type="monster" data-unit="m6"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
+                    <button class="action-btn monster-action hidden" data-type="monster" data-unit="m7"><span class="unit-symbol"></span><span class="unit-cost"></span></button>
 
-            <button id="monster-menu-btn" class="menu-btn">♞</button>
+                    <button id="monster-menu-btn" class="menu-btn">♞</button>
+                </div>
+            </div>
         </div>
     </div>
-
-    <!-- CONSOLA DE DEBUG -->
-    <div id="debug-console"></div>
-    <button id="copy-log-btn">Copiar Log</button>
 
     <!-- SDKs do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <script type="module" src="game.js"></script>
+    <script type="module" src="game.js?v=1.1"></script> <!-- Cache Busting -->
 </body>
 </html>

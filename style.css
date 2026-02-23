@@ -1,68 +1,83 @@
 
-/* Ficheiro CSS para Echoes of Evolution - v10 (Botões com Símbolos) */
+/* Ficheiro CSS para Echoes of Evolution - Layout Mobile 1:2 */
 
-/* --- Configuração Geral --- */
-body {
-    margin: 0; padding: 0; background: #000; color: white;
-    font-family: sans-serif; overflow: hidden; touch-action: none;
-    display: flex;
-    flex-direction: column; 
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
+/* --- Configuração Geral e do Container --- */
+html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background-color: #000; /* Fundo preto para as barras laterais */
+    display: flex; justify-content: center; align-items: center;
+    font-family: sans-serif; touch-action: none;
 }
 
-canvas { display: block; background: #1a1a1a; width: 100%; flex-shrink: 1; min-height: 0; }
+#app-container {
+    display: flex;
+    flex-direction: column;
+    aspect-ratio: 1 / 2; /* Força a proporção de telemóvel */
+    height: 100%; /* Ocupa a altura máxima */
+    max-height: 100vh;
+    background-color: #1a1a1a; /* Cor de fundo do jogo */
+    box-shadow: 0 0 20px rgba(255,255,255,0.2); /* Um brilho subtil */
+}
 
-/* --- Novas Barras de HUD --- */
-.hud-bar { width: 100%; padding: 5px 20px; display: flex; justify-content: center; gap: 20px; background: #000; box-sizing: border-box; z-index: 10; flex-shrink: 0; font-size: 1.2em; }
-#enemy-hud { justify-content: flex-end; }
-#player-hud { justify-content: flex-start; order: 2; }
-.hud-item { display: flex; align-items: center; gap: 8px; font-weight: bold; }
+/* --- Canvas (ocupa o espaço restante) --- */
+canvas {
+    flex-grow: 1; /* Essencial para que o canvas preencha o espaço */
+    min-height: 0; /* Previne problemas de overflow no flexbox */
+    display: block;
+    width: 100%;
+}
 
-/* --- Classe Utilitária para Ocultar --- */
-.hidden { display: none !important; }
+/* --- Barras de HUD (Topo e Fundo) --- */
+.hud-bar {
+    width: 100%; padding: 5px 15px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: #000; box-sizing: border-box;
+    z-index: 10; flex-shrink: 0; /* Garante que as HUDs não encolhem */
+    font-size: 1.1em; color: white;
+}
+
+.hud-item {
+    display: flex; align-items: center; gap: 8px; font-weight: bold;
+}
+
+/* --- Container da UI Inferior --- */
+#bottom-ui-container {
+    display: flex; flex-direction: column;
+    flex-shrink: 0; /* Garante que a UI inferior não encolhe */
+}
 
 /* --- Barra de Ações --- */
-#bottom-action-bar { position: static; width: 100%; height: 80px; display: flex; justify-content: center; align-items: center; box-sizing: border-box; z-index: 20; order: 3; }
-#button-container { height: 100%; width: 100%; display: flex; justify-content: space-around; align-items: center; gap: 8px; padding: 0 10px; box-sizing: border-box; background: rgba(0,0,0,0.7); border-top: 1px solid rgba(255, 255, 255, 0.2); }
+#bottom-action-bar {
+    width: 100%; height: 75px;
+    display: flex; justify-content: center; align-items: center;
+    box-sizing: border-box; z-index: 20;
+    background: rgba(0, 0, 0, 0.7);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
 
-/* --- Estilo UNIFICADO para TODOS os botões da barra --- */
+#button-container {
+    height: 100%; width: 100%; display: flex;
+    justify-content: space-around; align-items: center;
+    gap: 5px; padding: 0 5px; box-sizing: border-box;
+}
+
+/* --- Estilo dos Botões (Torre e Monstro) --- */
 .menu-btn, .action-btn {
-    flex-grow: 1; flex-basis: 0; height: 55px;
+    flex-grow: 1; flex-basis: 0; height: 50px;
     background-color: #34495e; border: 2px solid #7f8c8d; border-radius: 8px;
     color: white; font-weight: bold; cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-width: 0;
-    /* Alterado para layout de coluna */
-    flex-direction: column;
-    line-height: 1; /* Para melhor controlo do espaçamento */
-    padding: 5px 0; /* Espaçamento interno vertical */
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    min-width: 0; line-height: 1; padding: 4px 0;
 }
 
-/* --- Novos Estilos para Símbolo e Custo --- */
-.unit-symbol {
-    font-size: 1.5em; /* Tamanho grande para o símbolo */
-    flex-grow: 1; /* Ocupa o espaço disponível */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+.unit-symbol { font-size: 1.4em; flex-grow: 1; display: flex; align-items: center; justify-content: center; }
+.unit-cost { font-size: 0.7em; font-weight: normal; color: #bdc3c7; }
 
-.unit-cost {
-    font-size: 0.7em; /* Fonte pequena para o custo */
-    font-weight: normal;
-    color: #bdc3c7;
-}
-
-
-/* --- Estilos de Estado (Ativo/Selecionado) --- */
+/* --- Estados dos Botões --- */
+.hidden { display: none !important; }
 .menu-btn.active { background-color: #e67e22; border-color: #f39c12; }
 .action-btn.selected { background-color: #c0392b; border-color: #e74c3c; }
 .menu-btn:hover, .action-btn:hover { background-color: #4a627a; }
 
-/* --- Consola de Debug (Oculta) --- */
-#debug-console, #copy-log-btn { display: none; }

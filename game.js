@@ -37,21 +37,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateGhostGold(amount) { ghostGold += amount; enemyGoldSpan.textContent = Math.floor(ghostGold); }
     function updateGhostHealth(amount) { ghostHealth += amount; enemyHpSpan.textContent = ghostHealth; if (ghostHealth <= 0) endGame(true); }
 
-    // ============== FUNÇÕES DE DESENHO E PROJEÇÃO (ESTICADO) ==============
+    // ============== FUNÇÕES DE DESENHO E PROJEÇÃO (CORRIGIDO) ==============
     function resize() { canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; drawGrid(); }
     window.addEventListener('resize', resize);
+
     function project(c, r) {
-        const P = 0.35, Y_T = 0, Y_B = canvas.height * 4.2, T_Y = Y_B - Y_T, W_B = canvas.width, W_T = W_B * (1 - P);
+        const P = 0.35, Y_T = 0, Y_B = canvas.height, T_Y = Y_B - Y_T, W_B = canvas.width, W_T = W_B * (1 - P);
         const rR = r / (gridRows - 1), y = Y_T + rR * T_Y, w = W_T + rR * (W_B - W_T), tW = w / gridCols, sX = (canvas.width - w) / 2, x = sX + c * tW;
         return { x, y, tileWidth: tW };
     }
+
     function screenToGrid(sX, sY) {
-        const P = 0.35, Y_T = 0, Y_B = canvas.height * 4.2, T_Y = Y_B - Y_T, W_B = canvas.width, W_T = W_B * (1 - P);
-        if (sY < Y_T || sY > canvas.height) return { col: -1, row: -1 };
-        const yR = (sY - Y_T) / T_Y, row = Math.floor(yR * (gridRows - 1)), rR = row / (gridRows - 1);
-        const w = W_T + rR * (W_B - W_T), tW = w / gridCols, sX_ = (canvas.width - w) / 2, col = Math.floor((sX - sX_) / tW);
+        const P = 0.35, Y_T = 0, Y_B = canvas.height, T_Y = Y_B - Y_T, W_B = canvas.width, W_T = W_B * (1 - P);
+        if (sY < Y_T || sY > Y_B) return { col: -1, row: -1 };
+        const rR = (sY - Y_T) / T_Y;
+        const row = Math.floor(rR * (gridRows - 1));
+        const w = W_T + rR * (W_B - W_T), tW = w / gridCols, sX_ = (canvas.width - w) / 2;
+        if (sX < sX_ || sX > sX_ + w) return { col: -1, row: -1 };
+        const col = Math.floor((sX - sX_) / tW);
         return { col, row };
     }
+
     function drawGrid(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let r=0;r<gridRows;r++)for(let c=0;c<gridCols;c++)drawTile(path.some(p=>p.x===c&&p.y===r),r>=15,c,r)}
     function drawTile(isPath,isPlayerArea,c,r){const C=project(c,r),N=project(c,r+1);if(C.y > canvas.height) return; ctx.beginPath();ctx.moveTo(C.x,C.y);ctx.lineTo(C.x+C.tileWidth,C.y);ctx.lineTo(N.x+N.tileWidth,N.y);ctx.lineTo(N.x,N.y);ctx.closePath();ctx.fillStyle=isPath?"#2c3e50":(isPlayerArea?"#27ae6088":"#c0392b88");ctx.strokeStyle="rgba(255,255,255,0.1)";ctx.fill();ctx.stroke();}
     function getTileCenter(c,r){const C=project(c,r);if(r>=gridRows-1)return{x:C.x+C.tileWidth/2,y:C.y};const N=project(c,r+1);return{x:((C.x+C.tileWidth/2)+(N.x+N.tileWidth/2))/2,y:(C.y+N.y)/2};}
@@ -133,7 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     function endGame(isVictory){ gameStarted=false; alert(isVictory ? "Vitória!" : "Derrota!"); resetGame(); }
     async function saveGhost(actions){ if (actions.length > 0) { try { await db.collection("ghosts").add({ actions: actions, timestamp: firebase.firestore.FieldValue.serverTimestamp() }); log("Ghost salvo com sucesso."); } catch (e) { log("Erro ao salvar ghost: "+e); } } }
-    async function loadGhost(){ try { const querySnapshot = await db.collection("ghosts").orderBy("timestamp", "desc").limit(1).get(); if (!querySnapshot.empty) { ghost = querySnapshot.docs[0].data(); ghostActions = ghost.actions; log("Ghost carregado."); } else { log("Nenhum ghost encontrado."); } } catch (e) { log("Erro ao carregar ghost: "+e); } }
+    async function loadGhost(){ try { const querySnapshot = await db.collection("ghosts").orderBy('timestamp', "desc").limit(1).get(); if (!querySnapshot.empty) { ghost = querySnapshot.docs[0].data(); ghostActions = ghost.actions; log("Ghost carregado."); } else { log("Nenhum ghost encontrado."); } } catch (e) { log("Erro ao carregar ghost: "+e); } }
 
     async function resetGame() {
         gameStarted = false; playerGold = 500; playerHealth = 100; monsters = []; towers = []; playerActions = [];
