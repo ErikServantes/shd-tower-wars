@@ -5,11 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Echoes of Evolution</title>
-    <link rel="stylesheet" href="style.css?v=1.1"> <!-- Cache Busting -->
+    <link rel="stylesheet" href="style.css?v=1.2"> <!-- Cache Busting -->
 </head>
 <body>
 
     <div id="app-container">
+        <!-- Ecrã de Fim de Jogo (Escondido) -->
+        <div id="end-game-overlay" class="hidden">
+            <div id="end-game-message"></div>
+            <button id="replay-btn">Replay</button>
+        </div>
+
         <!-- HUD do Inimigo (Superior) -->
         <div id="enemy-hud" class="hud-bar">
             <div class="hud-item">❤️ <span id="enemy-hp">100</span></div>
@@ -58,6 +64,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <script type="module" src="game.js?v=1.1"></script> <!-- Cache Busting -->
+    <script type="module" src="game.js?v=1.2"></script>
 </body>
 </html>
