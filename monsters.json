@@ -12,7 +12,8 @@
         "health": 100,
         "speed": 90,
         "reward": 5, 
-        "asset": "assets/monsters/goblin_1.png"
+        "asset": "assets/monsters/goblin_1.png",
+        "isFlying": false
       }
     ]
   },
@@ -28,7 +29,8 @@
         "health": 300,
         "speed": 60,
         "reward": 10,
-        "asset": "assets/monsters/orc_1.png"
+        "asset": "assets/monsters/orc_1.png",
+        "isFlying": false
       }
     ]
   },
@@ -44,7 +46,8 @@
         "health": 800,
         "speed": 30,
         "reward": 25,
-        "asset": "assets/monsters/golem_1.png"
+        "asset": "assets/monsters/golem_1.png",
+        "isFlying": false
       }
     ]
   },
@@ -60,7 +63,8 @@
         "health": 80,
         "speed": 100,
         "reward": 7,
-        "asset": "assets/monsters/bat_1.png"
+        "asset": "assets/monsters/bat_1.png",
+        "isFlying": true
       }
     ]
   },
@@ -76,7 +80,8 @@
         "health": 120,
         "speed": 70,
         "reward": 12,
-        "asset": "assets/monsters/skeleton_1.png"
+        "asset": "assets/monsters/skeleton_1.png",
+        "isFlying": false
       }
     ]
   },
@@ -92,7 +97,8 @@
         "health": 200,
         "speed": 120,
         "reward": 15,
-        "asset": "assets/monsters/wolf_1.png"
+        "asset": "assets/monsters/wolf_1.png",
+        "isFlying": false
       }
     ]
   },
@@ -108,7 +114,8 @@
         "health": 1500,
         "speed": 40,
         "reward": 100,
-        "asset": "assets/monsters/dragon_1.png"
+        "asset": "assets/monsters/dragon_1.png",
+        "isFlying": true
       }
     ]
   }

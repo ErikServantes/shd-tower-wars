@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const ghostPath = (() => { const v = [{x: 4, y: 0}, {x: 4, y: 3}, {x: 6, y: 3}, {x: 6, y: 1}, {x: 8, y: 1}, {x: 8, y: 5}, {x: 13, y: 5}, {x: 13, y: 9}, {x: 6, y: 9}, {x: 6, y: 6}, {x: 2, y: 6}, {x: 2, y: 13}, {x: 7, y: 13}, {x: 7, y: 16}, {x: 12, y: 16}, {x: 12, y: 23}, {x: 9, y: 23}, {x: 8, y: 23}, {x: 8, y: 20}, {x: 1, y: 20}, {x: 1, y: 24}, {x: 6, y: 24}, {x: 6, y: 28}, {x: 8, y: 28}, {x: 8, y: 26}, {x: 10, y: 26}, {x: 10, y: 29}]; const p=[];if(v.length===0)return p;for(let i=0;i<v.length-1;i++){let s=v[i],e=v[i+1],x=s.x,y=s.y,dX=Math.sign(e.x-s.x),dY=Math.sign(e.y-s.y);while(x!==e.x||y!==e.y){p.push({x,y});if(x!==e.x)x+=dX;else if(y!==e.y)y+=dY}}p.push(v[v.length-1]);return p; })();
     const playerPath = [...ghostPath].reverse();
+    const ghostFlyingPath = [{x: 4, y: 0}, {x: 10, y: 29}];
+    const playerFlyingPath = [...ghostFlyingPath].reverse();
 
     class Camera {
         constructor(canvas) { this.canvas = canvas; this.perspective = 0.35; this.verticalScale = 1.0; }
@@ -50,7 +52,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateGhostHealth(amount) { ghostHealth += amount; enemyHpSpan.textContent = ghostHealth; if (ghostHealth <= 0) { enemyHpSpan.textContent = 0; } }
 
     function drawGrid() { ctx.clearRect(0, 0, canvas.width, canvas.height); for (let r = 0; r < gridRows; r++) { for (let c = 0; c < gridCols; c++) { drawTile(ghostPath.some(p => p.x === c && p.y === r), r >= 15, c, r); } } }
-    function drawTile(isPath, isPlayerArea, c, r) { const C = camera.project(c, r), N = camera.project(c, r + 1); if (C.y > canvas.height) return; ctx.beginPath(); ctx.moveTo(C.x, C.y); ctx.lineTo(C.x + C.tileWidth, C.y); ctx.lineTo(N.x + N.tileWidth, N.y); ctx.lineTo(N.x, N.y); ctx.closePath(); ctx.fillStyle = isPath ? "#2c3e50" : isPlayerArea ? "#27ae6088" : "#c0392b88"; ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.fill(); ctx.stroke(); }
+    function drawTile(isPath, isPlayerArea, c, r) {
+        const C = camera.project(c, r), N = camera.project(c, r + 1);
+        if (C.y > canvas.height) return;
+        ctx.beginPath();
+        ctx.moveTo(C.x, C.y);
+        ctx.lineTo(C.x + C.tileWidth, C.y);
+        ctx.lineTo(N.x + N.tileWidth, N.y);
+        ctx.lineTo(N.x, N.y);
+        ctx.closePath();
+        ctx.fillStyle = isPath ? "#2c3e50" : isPlayerArea ? "#27ae6088" : "#c0392b88";
+        ctx.strokeStyle = "rgba(255,255,255,0.1)";
+        ctx.lineWidth = 1; // FIX: Reset line width for grid lines
+        ctx.fill();
+        ctx.stroke();
+    }
     function drawGameScene() { if (!camera) return; drawGrid(); towers.forEach(t => t.draw()); ghostTowers.forEach(t => t.draw()); monsters.forEach(m => m.draw()); ghostMonsters.forEach(m => m.draw()); projectiles.forEach(p => p.draw()); if (hoveredTower) { ctx.beginPath(); ctx.arc(hoveredTower.x, hoveredTower.y, hoveredTower.range, 0, 2 * Math.PI); ctx.fillStyle = "rgba(255, 255, 255, 0.2)"; ctx.fill(); } if (selectedAction && selectedAction.type === 'tower' && selectedAction.ghostTower.visible) { const { x, y, rangeInPixels, isValid } = selectedAction.ghostTower; ctx.beginPath(); ctx.arc(x, y, 10, 0, 2 * Math.PI); ctx.fillStyle = isValid ? "rgba(0, 100, 255, 0.5)" : "rgba(255, 0, 0, 0.5)"; ctx.fill(); ctx.beginPath(); ctx.arc(x, y, rangeInPixels, 0, 2 * Math.PI); ctx.fillStyle = isValid ? "rgba(0, 100, 255, 0.2)" : "rgba(255, 0, 0, 0.2)"; ctx.fill(); } }
     function resize(){ canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; drawGameScene(); }
 
@@ -59,8 +75,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     class Monster {
         constructor(t, l, p) {
             const c = monsterData[t].levels[l - 1];
-            this.type = t, this.level = l, this.path = p, this.pathIndex = 0, this.health = c.health, this.maxHealth = c.health, this.speed = c.speed, this.reward = c.reward;
-            const s = camera.getTileCenter(p[0].x, p[0].y);
+            this.type = t;
+            this.level = l;
+            this.isFlying = c.isFlying || false; 
+            this.path = this.isFlying ? (p === playerPath ? playerFlyingPath : ghostFlyingPath) : p;
+            this.pathIndex = 0;
+            this.health = c.health;
+            this.maxHealth = c.health;
+            this.speed = c.speed;
+            this.reward = c.reward;
+            const s = camera.getTileCenter(this.path[0].x, this.path[0].y);
             this.x = s.x, this.y = s.y, this.reachedEnd = !1;
         }
         move(dT) {
@@ -98,6 +122,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctx.beginPath();
             ctx.arc(this.x, this.y, 10, 0, 2 * Math.PI);
             ctx.fill();
+            if (this.isFlying) {
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
             if (this.health < this.maxHealth) {
                 const p = this.y - 20, w = 30, h = 5;
                 ctx.fillStyle = "#444";
@@ -112,13 +141,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         constructor(t, l, c, r, owner) {
             const d = towerData[t].levels[l - 1];
             this.type = t, this.level = l, this.col = c, this.row = r, this.damage = d.damage;
+            this.canAttackFlying = d.canAttackFlying || false;
+            this.canAttackGround = d.canAttackGround || false;
             const tileWidthAtTower = camera.project(c, r).tileWidth;
             this.range = d.range * tileWidthAtTower;
             this.fireRate = d.fireRate, this.cost = d.cost, this.owner = owner;
             const p = camera.getTileCenter(c, r);
             this.x = p.x, this.y = p.y, this.target = null, this.fireCooldown = 0
         }
-        findTarget(monsters) { if (this.target && this.target.health > 0 && Math.sqrt(Math.pow(this.x - this.target.x, 2) + Math.pow(this.y - this.target.y, 2)) <= this.range) return; this.target = null; let closestTarget = null, minDistance = Infinity; for (const monster of monsters) { const distance = Math.sqrt(Math.pow(this.x - monster.x, 2) + Math.pow(this.y - monster.y, 2)); if (distance <= this.range && distance < minDistance) { minDistance = distance, closestTarget = monster } } this.target = closestTarget }
+        findTarget(monsters) {
+            if (this.target && this.target.health > 0 && Math.sqrt(Math.pow(this.x - this.target.x, 2) + Math.pow(this.y - this.target.y, 2)) <= this.range) {
+                return;
+            }
+            this.target = null;
+            let closestTarget = null, minDistance = Infinity;
+            for (const monster of monsters) {
+                if ((monster.isFlying && !this.canAttackFlying) || (!monster.isFlying && !this.canAttackGround)) {
+                    continue;
+                }
+                const distance = Math.sqrt(Math.pow(this.x - monster.x, 2) + Math.pow(this.y - monster.y, 2));
+                if (distance <= this.range && distance < minDistance) {
+                    minDistance = distance;
+                    closestTarget = monster;
+                }
+            }
+            this.target = closestTarget;
+        }
         attack(dT) { if (!this.target) return; this.fireCooldown -= dT; if (this.fireCooldown <= 0) { projectiles.push(new Projectile(this.x, this.y, this.target, this.damage, this.owner)); this.fireCooldown = 1 / this.fireRate } }
         draw() { const p = camera.getTileCenter(this.col, this.row); ctx.fillStyle = this.owner === 'player' ? '#3498db' : '#9b59b6'; ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, 2 * Math.PI); ctx.fill() }
     }
@@ -265,7 +313,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             const pLeaked = monsters.filter(m => m.reachedEnd), gLeaked = ghostMonsters.filter(m => m.reachedEnd);
             if (pLeaked.length > 0) updateGhostHealth(-10 * pLeaked.length);
-            if (gLeaked.length > 0) updatePlayerHealth(-10 * gLeaked.length);
+            if (gLeaked.length > 0) updatePlayerHealth(-10 * pLeaked.length);
             monsters = monsters.filter(m => m.health > 0 && !m.reachedEnd);
             ghostMonsters = ghostMonsters.filter(m => m.health > 0 && !m.reachedEnd);
             
