@@ -238,9 +238,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             monsters = monsters.filter(m => m.health > 0 && !m.reachedEnd);
             ghostMonsters = ghostMonsters.filter(m => m.health > 0 && !m.reachedEnd);
             
-            if (ghost && roundTime > 30 && nextGhostActionIndex >= ghostActions.length && ghostMonsters.length === 0) { 
-                endGame(true); 
-            }
+            
         }
 
         if (!document.hidden) {
