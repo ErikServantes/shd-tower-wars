@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const gridCols = 15, gridRows = 30;
     let playerGold, playerHealth, monsters, towers, playerActions, selectedAction, hoveredTower, projectiles;
-    let gameStarted, roundTime, lastTime;
+    let gameStarted, roundTime, lastTime, timeWithoutMonsters;
     let ghost, ghostActions, ghostGold, ghostHealth, ghostTowers, ghostMonsters, nextGhostActionIndex;
     let camera;
 
@@ -217,6 +217,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return; // Stop the loop once the game has ended
             }
 
+            // Stalemate condition
+            if (monsters.length === 0 && ghostMonsters.length === 0) {
+                timeWithoutMonsters += dT;
+            } else {
+                timeWithoutMonsters = 0;
+            }
+
+            if (roundTime >= 30 && timeWithoutMonsters >= 5) {
+                console.log(`%c[GAME END]: Stalemate condition met (Round > 30s and no monsters for 5s). Determining winner by health.`, 'color: orange; font-weight: bold;');
+                console.log(`Player Health: ${playerHealth}, Ghost Health: ${ghostHealth}`);
+                endGame(playerHealth >= ghostHealth);
+                return; // Stop the loop once the game has ended
+            }
+
             updatePlayerGold(1 * dT);
             if (ghost) updateGhostGold(1 * dT);
 
@@ -336,6 +350,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ghostTowers = []; 
         ghostMonsters = []; 
         roundTime = 0; 
+        timeWithoutMonsters = 0;
         selectedAction = null; 
         hoveredTower = null; 
         lastTime = null; 
