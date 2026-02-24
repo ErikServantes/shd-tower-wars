@@ -6,9 +6,9 @@
         ]
     },
     "mage": {
-        "symbol": "🚧",
+        "symbol": "🧙",
         "levels": [
-            { "cost": 999, "damage": 0, "range": 0, "fireRate": 0 }
+            { "cost": 120, "damage": 25, "range": 3.5, "fireRate": 1.5 }
         ]
     },
     "cannon": {
@@ -24,21 +24,21 @@
         ]
     },
     "sniper": {
-        "symbol": "🚧",
+        "symbol": "🎯",
         "levels": [
-            { "cost": 999, "damage": 0, "range": 0, "fireRate": 0 }
+            { "cost": 300, "damage": 100, "range": 6, "fireRate": 0.5 }
         ]
     },
     "splash": {
-        "symbol": "🚧",
+        "symbol": "💥",
         "levels": [
-            { "cost": 999, "damage": 0, "range": 0, "fireRate": 0 }
+            { "cost": 200, "damage": 40, "range": 2, "fireRate": 1 }
         ]
     },
     "farm": {
-        "symbol": "🚧",
+        "symbol": "💰",
         "levels": [
-            { "cost": 999, "damage": 0, "range": 0, "fireRate": 0 }
+            { "cost": 50, "damage": 1, "range": 1, "fireRate": 1 }
         ]
     }
 }
