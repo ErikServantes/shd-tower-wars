@@ -37,9 +37,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function updatePlayerGold(amount) { playerGold += amount; playerGoldSpan.textContent = Math.floor(playerGold); }
-    function updatePlayerHealth(amount) { playerHealth += amount; playerHpSpan.textContent = playerHealth; if (playerHealth <= 0) { playerHpSpan.textContent = 0; endGame(false); } }
+    function updatePlayerHealth(amount) {
+        playerHealth += amount;
+        playerHpSpan.textContent = playerHealth;
+        if (playerHealth <= 0) {
+            console.log(`%c[GAME END]: Player health reached ${playerHealth}. Player LOSES.`, 'color: red; font-weight: bold;');
+            playerHpSpan.textContent = 0;
+            endGame(false);
+        }
+    }
     function updateGhostGold(amount) { ghostGold += amount; enemyGoldSpan.textContent = Math.floor(ghostGold); }
-    function updateGhostHealth(amount) { ghostHealth += amount; enemyHpSpan.textContent = ghostHealth; if (ghostHealth <= 0) { enemyHpSpan.textContent = 0; endGame(true); } }
+    function updateGhostHealth(amount) { ghostHealth += amount; enemyHpSpan.textContent = ghostHealth; if (ghostHealth <= 0) { enemyHpSpan.textContent = 0; } }
 
     function drawGrid() { ctx.clearRect(0, 0, canvas.width, canvas.height); for (let r = 0; r < gridRows; r++) { for (let c = 0; c < gridCols; c++) { drawTile(ghostPath.some(p => p.x === c && p.y === r), r >= 15, c, r); } } }
     function drawTile(isPath, isPlayerArea, c, r) { const C = camera.project(c, r), N = camera.project(c, r + 1); if (C.y > canvas.height) return; ctx.beginPath(); ctx.moveTo(C.x, C.y); ctx.lineTo(C.x + C.tileWidth, C.y); ctx.lineTo(N.x + N.tileWidth, N.y); ctx.lineTo(N.x, N.y); ctx.closePath(); ctx.fillStyle = isPath ? "#2c3e50" : isPlayerArea ? "#27ae6088" : "#c0392b88"; ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.fill(); ctx.stroke(); }
@@ -200,6 +208,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (gameStarted) {
             roundTime += dT;
+
+            // Time limit condition
+            if (roundTime >= 120) {
+                console.log(`%c[GAME END]: Round timer reached 120 seconds. Determining winner by health.`, 'color: orange; font-weight: bold;');
+                console.log(`Player Health: ${playerHealth}, Ghost Health: ${ghostHealth}`);
+                endGame(playerHealth >= ghostHealth);
+                return; // Stop the loop once the game has ended
+            }
+
             updatePlayerGold(1 * dT);
             if (ghost) updateGhostGold(1 * dT);
 
@@ -238,7 +255,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             monsters = monsters.filter(m => m.health > 0 && !m.reachedEnd);
             ghostMonsters = ghostMonsters.filter(m => m.health > 0 && !m.reachedEnd);
             
-            
         }
 
         if (!document.hidden) {
@@ -251,7 +267,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     function endGame(isVictory){ 
-        if (!gameStarted) return; 
+        if (!gameStarted) {
+            console.warn('[GAME END]: endGame() called, but game was not started. Ignoring.');
+            return;
+        }
+        console.log(`%c[GAME END]: endGame(${isVictory}) called.`, 'color: blue; font-weight: bold;');
         gameStarted = false; 
         endGameMessage.textContent = isVictory ? "Vitória!" : "Derrota!"; 
         endGameOverlay.classList.remove('hidden'); 
