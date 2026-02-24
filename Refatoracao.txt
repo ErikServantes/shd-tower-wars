@@ -1,0 +1,47 @@
+================================================================
+PROJETO: Refatoração do Motor de Renderização
+================================================================
+Última atualização: 26 de Maio de 2024
+Status: [PENDENTE]
+
+Objetivo: Desacoplar a lógica de renderização da lógica de jogo através da introdução de um sistema de "Câmara". Isto tornará o código mais limpo, flexível e fácil de manter, permitindo alterações visuais (como POV, zoom ou escala) sem quebrar a lógica do jogo.
+
+----------------------------------------------------------------
+
+================================================================
+FASE 1: FUNDAÇÃO DA CLASSE CAMERA
+================================================================
+Status: [PENDENTE]
+----------------------------------------------------------------
+[ ] 1.1 - **Definir a Classe Camera:** Criar a estrutura básica `class Camera { ... }` no ficheiro `game.js`.
+
+[ ] 1.2 - **Adicionar Propriedades Essenciais:** Dotar a câmara com as suas propriedades de estado, como `perspective`, `verticalScale`, e a referência ao `canvas`.
+
+[ ] 1.3 - **Criar Instância Global:** Instanciar um único objeto `camera` no início do jogo para ser usado por todo o sistema.
+
+================================================================
+FASE 2: CENTRALIZAÇÃO DA LÓGICA DE PROJEÇÃO
+================================================================
+Status: [PENDENTE]
+----------------------------------------------------------------
+[ ] 2.1 - **Mover Funções para a Câmara:** Transformar as funções globais `project`, `screenToGrid` e `getTileCenter` em métodos da classe `Camera`.
+
+[ ] 2.2 - **Adaptar Métodos:** Fazer com que os novos métodos da câmara usem as suas propriedades internas (ex: `this.verticalScale`) para os cálculos.
+
+[ ] 2.3 - **Substituir Chamadas no Código:** Percorrer todo o `game.js` e substituir as chamadas às funções antigas pelas chamadas aos novos métodos da instância da câmara (ex: `project(c, r)` passa a `camera.project(c, r)`).
+
+================================================================
+FASE 3: IMPLEMENTAÇÃO E TESTE
+================================================================
+Status: [PENDENTE]
+----------------------------------------------------------------
+[ ] 3.1 - **Aplicar a Correção Visual:** Com o sistema de câmara implementado, resolver o bug original de forma limpa, definindo `camera.verticalScale = 0.95` na inicialização do jogo.
+
+[ ] 3.2 - **Teste de Regressão Completo:** Verificar exaustivamente se todas as funcionalidades do jogo continuam a operar como esperado:
+    - [ ] Construção de torres.
+    - [ ] Seleção e pré-visualização de torres.
+    - [ ] Deteção de cliques do rato.
+    - [ ] Movimento e renderização de monstros e projéteis.
+    - [ ] Comportamento do Ghost.
+
+[ ] 3.3 - **Limpeza de Código:** Remover as funções globais antigas (`project`, `screenToGrid`, `getTileCenter`) que foram substituídas pelos métodos da câmara.
