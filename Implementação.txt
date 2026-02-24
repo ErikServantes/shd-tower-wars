@@ -15,13 +15,26 @@ Estas são as bases do jogo. Alterações aqui devem ser bem ponderadas.
 3.  **Caminhos Espelhados:** O caminho que os monstros do jogador percorrem é o exato inverso do caminho dos monstros do Ghost.
 4.  **Economia Simétrica:** Ambos, Player e Ghost, começam com os mesmos recursos (Ouro e Vida) e ganham ouro passivamente à mesma taxa.
 5.  **Ghost Determinista:** As ações do Ghost (construir, spawnar) são executadas com base no tempo de jogo (`roundTime`) em que foram originalmente gravadas, garantindo consistência.
-6.  **Início por Ação:** O cronómetro da partida e a primeira ação do Ghost só são despoletados quando o jogador realiza a sua primeira ação (construir ou spawnar).
+6.  **Início por Monstro:** O cronómetro da partida só é despoletado quando o jogador envia o seu **primeiro monstro**. A construção de torres não inicia o jogo.
 7.  **Condição de Vitória/Derrota:**
     - O Jogador **VENCE** se sobreviver a todas as ações do Ghost e eliminar todos os seus monstros.
     - O Jogador **PERDE** se a sua vida chegar a zero.
 8.  **O Ciclo Evolutivo:** No final da partida, o registo de ações do jogador é guardado no Firebase, tornando-se o novo Ghost a ser enfrentado.
 
 ----------------------------------------------------------------
+
+================================================================
+FASE 7: REFORMULAÇÃO DO INÍCIO DE JOGO
+================================================================
+Status: [A DESENVOLVER]
+----------------------------------------------------------------
+[ ] 7.1 - **Construção Instantânea do Ghost:**
+    - Objetivo: Sincronizar o início da ação e tornar a fase de construção inicial mais justa.
+    - Implementação:
+        1. Ao carregar um Ghost, o sistema deve pré-processar as suas ações. Todas as torres construídas pelo Ghost **antes** do seu primeiro monstro são identificadas.
+        2. Quando o jogador envia o seu primeiro monstro (o que inicia a partida), essas torres pré-identificadas do Ghost são construídas **instantaneamente** e sem custo nesse momento (`roundTime = 0`).
+        3. A primeira ação de "spawn" do Ghost acontece também no `roundTime = 0`, em simultâneo com a do jogador.
+        4. Todas as ações subsequentes do Ghost (construções e spawns) seguirão os seus timestamps originais, ajustados para a nova linha do tempo.
 
 ================================================================
 FASE 6: MELHORIAS VISUAIS E DE CLAREZA
