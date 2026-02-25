@@ -91,7 +91,8 @@ canvas {
 }
 
 #enemy-hud {
-    justify-content: flex-end; /* Alinha os itens do inimigo (vida/ouro) à direita */
+    justify-content: space-between; /* Alinha os itens do inimigo e a ronda */
+    width: 100%;
 }
 
 .hud-item {
