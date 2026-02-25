@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Echoes of Evolution</title>
-    <link rel="stylesheet" href="style.css?v=1.7"> <!-- Cache Busting -->
+    <link rel="stylesheet" href="style.css?v=1.8"> <!-- Cache Busting -->
 </head>
 <body>
 
@@ -16,10 +16,18 @@
             <button id="replay-btn">Replay</button>
         </div>
 
-        <!-- HUD do Inimigo (Superior) -->
-        <div id="enemy-hud" class="hud-bar">
-            <div class="hud-item">❤️ <span id="enemy-hp">100</span></div>
-            <div class="hud-item">💰 <span id="enemy-gold">500</span></div>
+        <!-- HUD Superior -->
+        <div id="top-hud">
+            <!-- Informações da Ronda -->
+            <div id="round-info">
+                <div class="hud-item">Round: <span id="round-number">1</span></div>
+            </div>
+
+            <!-- HUD do Inimigo (Fantasma) -->
+            <div id="enemy-hud" class="hud-bar">
+                <div class="hud-item">❤️ <span id="enemy-hp">100</span></div>
+                <div class="hud-item">💰 <span id="enemy-gold">500</span></div>
+            </div>
         </div>
 
         <canvas id="gameCanvas"></canvas>
@@ -29,6 +37,7 @@
             <div id="player-hud" class="hud-bar">
                 <div class="hud-item">❤️ <span id="player-hp">100</span></div>
                 <div class="hud-item">💰 <span id="player-gold">500</span></div>
+                <div id="round-timer" class="hud-item"><span id="timer-display">2'00</span></div>
             </div>
 
             <!-- Barra de Ações -->
@@ -64,6 +73,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <script type="module" src="game.js?v=1.7"></script> <!-- Incremented cache-busting version -->
+    <script type="module" src="game.js?v=1.9"></script> <!-- Incremented cache-busting version -->
 </body>
 </html>
