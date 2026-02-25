@@ -62,12 +62,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updatePlayerHealth(amount) {
         playerHealth += amount;
         playerHpSpan.textContent = Math.max(0, playerHealth);
-        if (playerHealth <= 0) endRound(false); // Player perde a ronda se a vida chegar a 0
+        if (playerHealth <= 0) endGame(false); // Game Over imediato se HP chegar a 0
     }
     function updateGhostHealth(amount) {
         ghostHealth += amount;
         enemyHpSpan.textContent = Math.max(0, ghostHealth);
-        if (ghostHealth <= 0) endRound(true); // Player ganha a ronda se a vida do ghost chegar a 0
+        if (ghostHealth <= 0) endGame(true); // Game Over imediato se HP chegar a 0
     }
     
     // --- Funções de Formatação de Tempo ---
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             roundTimer -= dT;
             timerDisplaySpan.textContent = formatTime(roundTimer);
             if (roundTimer <= 0) {
-                endRound(playerHealth >= ghostHealth);
+                endRound(false); // Round finished due to time limit
                 return;
             }
 
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const elapsedTimeInRound = ROUND_DURATION - roundTimer;
             if (elapsedTimeInRound >= 30 && timeWithoutMonsters >= 5) {
                 console.log(`%c[ROUND END]: Stalemate condition met (Round > 30s and no monsters for 5s).`, 'color: orange; font-weight: bold;');
-                endRound(playerHealth >= ghostHealth);
+                endRound(false); // Round finished due to stalemate
                 return;
             }
 
@@ -279,42 +279,51 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Gestão de Rondas e Jogo ---
     async function loadGameData(){try{const t=`?v=${Date.now()}`,[e,o]=await Promise.all([fetch(`towers.json${t}`),fetch(`monsters.json${t}`)]);towerData=await e.json();monsterData=await o.json();log("Dados de Torres e Monstros carregados.")}catch(t){log(`Erro ao carregar dados do jogo: ${t}`)} }
     
-    function endRound(playerWon) {
+    function endRound(gameEndedByWinLoss) {
+        // Se a ronda acabar porque alguém morreu, endGame já foi chamado.
+        // Se a ronda acabar por tempo/stalemate, esta função é chamada.
+        
         if (isRoundOver) return;
         isRoundOver = true;
         gameStarted = false; // Pausa o jogo até a próxima ronda começar
         
-        // Para o loop de jogo temporariamente para mostrar a mensagem
+        // Para o loop de jogo temporariamente
         cancelAnimationFrame(gameLoopTimestamp);
         
-        const winner = playerWon ? "Player" : "Ghost";
-        console.log(`%c[ROUND END]: Round ${currentRound} finished. Winner: ${winner}`, 'color: blue; font-weight: bold;');
+        console.log(`%c[ROUND END]: Round ${currentRound} finished.`, 'color: blue; font-weight: bold;');
+
+        // Verifica se o jogo acabou DEFINITIVAMENTE (Round 3 ou Morte)
+        // Se 'gameEndedByWinLoss' for true, significa que veio de updateHealth -> alguém morreu -> endGame já foi chamado ou será.
+        // Mas aqui estamos no 'endRound', que é chamado pelo Timer ou Stalemate.
+        // Verificamos se chegámos ao fim da Ronda 3.
         
-        // Mostra uma mensagem simples e avança para a próxima ronda após um delay
-        endGameMessage.textContent = `Round ${currentRound} - ${playerWon ? "Vitória!" : "Derrota!"}`;
+        if (currentRound >= 3) {
+            endGame(playerHealth >= ghostHealth);
+            return;
+        }
+
+        // Se não for o fim do jogo, prepara a próxima ronda
+        // Mostra uma mensagem simples (agora em Overlay temporário ou apenas log, pois não queremos bloquear se for só transição)
+        // O utilizador pediu para não mostrar painel de derrota/vitória exceto no fim.
+        // Podemos mostrar um overlay "Round X Complete" rápido.
+        
+        endGameMessage.textContent = `Round ${currentRound} Complete`;
         endGameOverlay.classList.remove('hidden');
-        replayBtn.classList.add('hidden'); // Esconde o botão de replay entre as rondas
+        replayBtn.classList.add('hidden'); // Esconde botão replay
 
         setTimeout(() => {
             endGameOverlay.classList.add('hidden');
-            replayBtn.classList.remove('hidden'); // Mostra novamente para o fim do jogo
-            
-            // Verifica se o jogo acabou (ex: um jogador sem vida)
-            if (playerHealth <= 0 || ghostHealth <= 0) {
-                endGame(playerHealth > ghostHealth);
-            } else {
-                startNextRound();
-            }
-        }, 3000); // Delay de 3 segundos entre as rondas
+            startNextRound();
+        }, 3000); 
     }
 
     function startNextRound() {
         currentRound++;
         roundNumberSpan.textContent = currentRound;
         log(`%c[ROUND START]: Starting Round ${currentRound}`, 'color: green; font-weight: bold;');
-        resetRoundState();
+        
+        resetRoundState(); // Agora mantém o ouro e torres!
         isRoundOver = false;
-        // Nota: gameStarted permanece false até o jogador spawnar um monstro
         
         // Reinicia o loop de jogo
         lastTime = null;
@@ -323,9 +332,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     function endGame(playerIsVictor) {
         cancelAnimationFrame(gameLoopTimestamp);
+        isRoundOver = true;
         log(`%c[GAME END]: Final Winner: ${playerIsVictor ? "Player" : "Ghost"}`, 'color: red; font-weight: bold;');
         endGameMessage.textContent = playerIsVictor ? "Vitória Final!" : "Derrota Final!";
         endGameOverlay.classList.remove('hidden');
+        replayBtn.classList.remove('hidden'); // Mostra botão de replay
         saveGhost(playerActions);
     }
 
@@ -353,6 +364,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Reseta apenas o estado da ronda (monstros, projéteis, etc.)
+    // MODIFICADO: Não reseta torres nem ouro!
     function resetRoundState() {
         monsters = []; projectiles = []; ghostMonsters = [];
         roundTimer = ROUND_DURATION;
@@ -360,18 +372,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         nextGhostActionIndex = 0;
         timeWithoutMonsters = 0;
         
-        // Limpa as torres do campo
-        towers = [];
-        ghostTowers = [];
+        // NOTA: Torres e Ouro NÃO são resetados entre rondas.
         
-        // Reseta o ouro para um valor inicial a cada ronda
-        playerGold = 500;
-        ghostGold = 500;
-        updatePlayerGold(0);
-        updateGhostGold(0);
-
         showActionButtons('towers');
-        log("Round state has been reset.");
+        log("Round state has been reset (keeping towers and gold).");
     }
     
     // Reseta o jogo inteiro para o estado inicial
@@ -392,8 +396,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateGhostHealth(0);
         roundNumberSpan.textContent = currentRound;
         
+        // No full reset, resetamos tudo (incluindo ouro e torres)
+        playerGold = 500;
+        ghostGold = 500;
+        updatePlayerGold(0);
+        updateGhostGold(0);
+        towers = [];
+        ghostTowers = [];
+
         await loadGhost();
-        resetRoundState();
+        
+        // Chamamos resetRoundState para limpar monstros e timer
+        monsters = []; projectiles = []; ghostMonsters = [];
+        roundTimer = ROUND_DURATION;
+        selectedAction = null; hoveredTower = null;
+        nextGhostActionIndex = 0;
+        timeWithoutMonsters = 0;
+        showActionButtons('towers');
 
         // Reinicia o game loop
         lastTime = null;
