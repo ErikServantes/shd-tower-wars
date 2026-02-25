@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let timeWithoutMonsters = 0; // Tempo sem monstros no mapa
     const ROUND_DURATION = 120;
     let gameStarted = false; // Estado para controlar o início do jogo
+    let roundGhostActions = []; // Ações do ghost para a ronda atual
 
 
     // --- Paths ---
@@ -166,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         drawGameScene();
     }
     function handleActionButtonClick(btn) { const unit = btn.dataset.unit, type = btn.dataset.type; if (type === 'monster') { spawnPlayerMonster(unit); } else if (type === 'tower' && towerData && towerData[unit]) { if (selectedAction && selectedAction.button === btn) { btn.classList.remove("selected"); selectedAction = null; } else { if (selectedAction) { selectedAction.button.classList.remove("selected"); } btn.classList.add("selected"); selectedAction = { button: btn, type: type, unit: unit, ghostTower: { visible: false, x: 0, y: 0, col: -1, row: -1, rangeInPixels: 0, isValid: false } }; } } drawGameScene(); }
-    function handleCanvasClick() { if (!selectedAction || selectedAction.type !== 'tower' || !selectedAction.ghostTower.isValid) return; const unitType = selectedAction.unit, level = 1, config = towerData[unitType].levels[level-1]; if (playerGold < config.cost) return; updatePlayerGold(-config.cost); towers.push(new Tower(unitType, level, selectedAction.ghostTower.col, selectedAction.ghostTower.row, 'player')); playerActions.push({ action: "build", type: unitType, level: level, col: selectedAction.ghostTower.col, row: selectedAction.ghostTower.row, timestamp: ROUND_DURATION - roundTimer }); selectedAction.button.classList.remove("selected"); selectedAction = null; drawGameScene(); }
+    function handleCanvasClick() { if (!selectedAction || selectedAction.type !== 'tower' || !selectedAction.ghostTower.isValid) return; const unitType = selectedAction.unit, level = 1, config = towerData[unitType].levels[level-1]; if (playerGold < config.cost) return; updatePlayerGold(-config.cost); towers.push(new Tower(unitType, level, selectedAction.ghostTower.col, selectedAction.ghostTower.row, 'player')); playerActions.push({ action: "build", type: unitType, level: level, col: selectedAction.ghostTower.col, row: selectedAction.ghostTower.row, timestamp: ROUND_DURATION - roundTimer, round: currentRound }); selectedAction.button.classList.remove("selected"); selectedAction = null; drawGameScene(); }
     function handleKeyPress(e) { if (e.key === "Escape" && selectedAction) { selectedAction.button.classList.remove("selected"); selectedAction = null; drawGameScene(); } const keyNum = parseInt(e.key); if (!isNaN(keyNum) && keyNum >= 1 && keyNum <= 7) { const unitTypes = Object.keys(monsterData); if (unitTypes[keyNum - 1]) { spawnPlayerMonster(unitTypes[keyNum - 1]); } } }
     
     // --- Lógica de Spawning e Início de Jogo ---
@@ -179,11 +180,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!gameStarted) {
             gameStarted = true;
             log("Jogo iniciado pelo spawn do primeiro monstro.");
+
+            // Executa instantaneamente as jogadas do ghost ANTERIORES ao primeiro spawn
+            // (Simula a 'Build Phase' do Ghost para esta ronda)
+            if (roundGhostActions.length > 0) {
+                while (nextGhostActionIndex < roundGhostActions.length) {
+                    const action = roundGhostActions[nextGhostActionIndex];
+                    // Se encontrarmos um spawn de monstro ou se a ação for muito tarde (opcional, mas o user pediu "até o primeiro monstro"), paramos.
+                    // A interpretação do user é: "até o primeiro monstro".
+                    if (action.action === 'spawn') {
+                        break; 
+                    }
+                    
+                    // Executa a ação (Build Tower)
+                    if (action.action === 'build') {
+                        buildGhostTower(action.type, action.level, gridCols - 1 - action.col, gridRows - 1 - action.row); 
+                    }
+                    nextGhostActionIndex++;
+                }
+            }
         }
 
         updatePlayerGold(-config.cost); 
         monsters.push(new Monster(unitType, level, playerPath, 'player')); 
-        playerActions.push({ action: 'spawn', type: unitType, level: level, timestamp: ROUND_DURATION - roundTimer }); 
+        playerActions.push({ action: 'spawn', type: unitType, level: level, timestamp: ROUND_DURATION - roundTimer, round: currentRound }); 
     }
 
     function spawnGhostMonster(unitType, level) {
@@ -223,9 +243,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Ações do Ghost
             const elapsedTime = ROUND_DURATION - roundTimer;
-            if (ghost && nextGhostActionIndex < ghostActions.length) { 
-                while (nextGhostActionIndex < ghostActions.length && elapsedTime >= ghostActions[nextGhostActionIndex].timestamp) { 
-                    const action = ghostActions[nextGhostActionIndex]; 
+            
+            // Usamos roundGhostActions em vez de ghostActions global
+            if (ghost && nextGhostActionIndex < roundGhostActions.length) { 
+                while (nextGhostActionIndex < roundGhostActions.length && elapsedTime >= roundGhostActions[nextGhostActionIndex].timestamp) { 
+                    const action = roundGhostActions[nextGhostActionIndex]; 
                     if (action.action === 'spawn') spawnGhostMonster(action.type, action.level); 
                     else if (action.action === 'build') buildGhostTower(action.type, action.level, gridCols - 1 - action.col, gridRows - 1 - action.row); 
                     nextGhostActionIndex++; 
@@ -280,9 +302,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadGameData(){try{const t=`?v=${Date.now()}`,[e,o]=await Promise.all([fetch(`towers.json${t}`),fetch(`monsters.json${t}`)]);towerData=await e.json();monsterData=await o.json();log("Dados de Torres e Monstros carregados.")}catch(t){log(`Erro ao carregar dados do jogo: ${t}`)} }
     
     function endRound(gameEndedByWinLoss) {
-        // Se a ronda acabar porque alguém morreu, endGame já foi chamado.
-        // Se a ronda acabar por tempo/stalemate, esta função é chamada.
-        
         if (isRoundOver) return;
         isRoundOver = true;
         gameStarted = false; // Pausa o jogo até a próxima ronda começar
@@ -292,21 +311,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         console.log(`%c[ROUND END]: Round ${currentRound} finished.`, 'color: blue; font-weight: bold;');
 
-        // Verifica se o jogo acabou DEFINITIVAMENTE (Round 3 ou Morte)
-        // Se 'gameEndedByWinLoss' for true, significa que veio de updateHealth -> alguém morreu -> endGame já foi chamado ou será.
-        // Mas aqui estamos no 'endRound', que é chamado pelo Timer ou Stalemate.
-        // Verificamos se chegámos ao fim da Ronda 3.
-        
         if (currentRound >= 3) {
             endGame(playerHealth >= ghostHealth);
             return;
         }
 
-        // Se não for o fim do jogo, prepara a próxima ronda
-        // Mostra uma mensagem simples (agora em Overlay temporário ou apenas log, pois não queremos bloquear se for só transição)
-        // O utilizador pediu para não mostrar painel de derrota/vitória exceto no fim.
-        // Podemos mostrar um overlay "Round X Complete" rápido.
-        
+        // Se não for o fim do jogo, prepara a próxima ronda.
         endGameMessage.textContent = `Round ${currentRound} Complete`;
         endGameOverlay.classList.remove('hidden');
         replayBtn.classList.add('hidden'); // Esconde botão replay
@@ -323,6 +333,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         log(`%c[ROUND START]: Starting Round ${currentRound}`, 'color: green; font-weight: bold;');
         
         resetRoundState(); // Agora mantém o ouro e torres!
+        
+        // Filtra e prepara as ações do ghost para a nova ronda
+        if (ghostActions.length > 0) {
+            roundGhostActions = ghostActions.filter(a => a.round === currentRound);
+            roundGhostActions.sort((a,b) => a.timestamp - b.timestamp);
+        } else {
+            roundGhostActions = [];
+        }
+        nextGhostActionIndex = 0;
+        
         isRoundOver = false;
         
         // Reinicia o loop de jogo
@@ -334,6 +354,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         cancelAnimationFrame(gameLoopTimestamp);
         isRoundOver = true;
         log(`%c[GAME END]: Final Winner: ${playerIsVictor ? "Player" : "Ghost"}`, 'color: red; font-weight: bold;');
+        
         endGameMessage.textContent = playerIsVictor ? "Vitória Final!" : "Derrota Final!";
         endGameOverlay.classList.remove('hidden');
         replayBtn.classList.remove('hidden'); // Mostra botão de replay
@@ -342,10 +363,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function saveGhost(actions){
         if(actions.length > 0){
-            actions.sort((a,b)=>a.timestamp-b.timestamp);
-            const firstActionTime = actions[0].timestamp;
-            const normalizedActions = actions.map(a => ({...a, timestamp: a.timestamp - firstActionTime}));
-            try{ await db.collection("ghosts").add({actions: normalizedActions, timestamp:firebase.firestore.FieldValue.serverTimestamp()}); log("Ghost salvo com sucesso.") }
+            // Normaliza as ações? Não, para multi-ronda precisamos dos dados exatos de cada ronda.
+            // Apenas ordenamos.
+            // Nota: Se quisermos normalizar, teríamos de normalizar POR RONDA, mas o timestamp já é relativo à ronda.
+            // Então basta guardar como está.
+            
+            // Mas espera, se tivermos muitas ações, convém garantir a ordem.
+            actions.sort((a,b) => {
+                if (a.round !== b.round) return a.round - b.round;
+                return a.timestamp - b.timestamp;
+            });
+            
+            try{ await db.collection("ghosts").add({actions: actions, timestamp:firebase.firestore.FieldValue.serverTimestamp()}); log("Ghost salvo com sucesso.") }
             catch(e) { log("Erro ao salvar ghost: "+e) }
         } else { log("Nenhuma ação para salvar."); }
     }
@@ -353,17 +382,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadGhost(){ 
         try { 
             const t = await db.collection("ghosts").orderBy("timestamp","desc").limit(1).get(); if(t.empty) throw new Error("Nenhum ghost no Firebase."); 
-            ghost = t.docs[0].data(); ghostActions = ghost.actions || []; if (ghostActions.length > 0) ghostActions.sort((a,b) => a.timestamp - b.timestamp); log("Ghost carregado do Firebase."); 
+            ghost = t.docs[0].data(); ghostActions = ghost.actions || []; 
+            // Ordenação global inicial
+            if (ghostActions.length > 0) {
+                 ghostActions.sort((a,b) => {
+                    if (a.round !== b.round) return a.round - b.round;
+                    return a.timestamp - b.timestamp;
+                });
+            }
+            log("Ghost carregado do Firebase."); 
         } catch(t) { 
             log(`${t.message} A carregar ghost local...`); 
             try { 
                 const res = await fetch(`ghost.json?v=${Date.now()}`); if(!res.ok) throw new Error("Falha ao carregar ghost.json"); 
-                ghost = await res.json(); ghostActions = ghost.actions || []; ghostActions.sort((a,b) => a.timestamp - b.timestamp); log("Ghost local carregado com sucesso."); 
+                ghost = await res.json(); ghostActions = ghost.actions || []; 
+                if (ghostActions.length > 0) {
+                     ghostActions.sort((a,b) => {
+                        if (a.round !== b.round) return a.round - b.round;
+                        return a.timestamp - b.timestamp;
+                    });
+                }
+                log("Ghost local carregado com sucesso."); 
             } catch(e) { log(`Erro ao carregar ghost local: ${e.message}`); ghost = null; ghostActions = []; } 
         } 
     }
 
-    // Reseta apenas o estado da ronda (monstros, projéteis, etc.)
+    // Reseta apenas o estado da ronda (monstros, projéteis, timer)
     // MODIFICADO: Não reseta torres nem ouro!
     function resetRoundState() {
         monsters = []; projectiles = []; ghostMonsters = [];
@@ -372,13 +416,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         nextGhostActionIndex = 0;
         timeWithoutMonsters = 0;
         
-        // NOTA: Torres e Ouro NÃO são resetados entre rondas.
-        
         showActionButtons('towers');
         log("Round state has been reset (keeping towers and gold).");
     }
     
-    // Reseta o jogo inteiro para o estado inicial
+    // Reseta o jogo inteiro para o estado inicial (incluindo ouro e torres)
     async function fullReset() {
         endGameOverlay.classList.add('hidden');
         isRoundOver = false;
@@ -396,7 +438,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateGhostHealth(0);
         roundNumberSpan.textContent = currentRound;
         
-        // No full reset, resetamos tudo (incluindo ouro e torres)
+        // No full reset, resetamos tudo
         playerGold = 500;
         ghostGold = 500;
         updatePlayerGold(0);
@@ -406,13 +448,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         await loadGhost();
         
+        // Prepara as ações do ghost para a ronda 1
+        if (ghostActions.length > 0) {
+            roundGhostActions = ghostActions.filter(a => a.round === currentRound);
+            roundGhostActions.sort((a,b) => a.timestamp - b.timestamp);
+        } else {
+            roundGhostActions = [];
+        }
+
         // Chamamos resetRoundState para limpar monstros e timer
-        monsters = []; projectiles = []; ghostMonsters = [];
-        roundTimer = ROUND_DURATION;
-        selectedAction = null; hoveredTower = null;
-        nextGhostActionIndex = 0;
-        timeWithoutMonsters = 0;
-        showActionButtons('towers');
+        resetRoundState();
 
         // Reinicia o game loop
         lastTime = null;
