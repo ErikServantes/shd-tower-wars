@@ -2,43 +2,43 @@
     "swordsman": {
         "symbol": "⚔️",
         "levels": [
-            { "speed": 50, "health": 50, "reward": 5, "cost": 15, "isFlying": false, "stealth": false, "immuneToNormal": false, "damageToPlayer": 1 }
+            { "speed": 50, "health": 250, "reward": 5, "cost": 15, "isFlying": false, "stealth": false, "immuneToNormal": false, "damageToPlayer": 1 }
         ]
     },
     "knight": {
         "symbol": "🛡️",
         "levels": [
-            { "speed": 100, "health": 350, "reward": 20, "cost": 80, "isFlying": false, "stealth": false, "immuneToNormal": false, "damageToPlayer": 2 }
+            { "speed": 100, "health": 1750, "reward": 20, "cost": 80, "isFlying": false, "stealth": false, "immuneToNormal": false, "damageToPlayer": 2 }
         ]
     },
     "shadder": {
         "symbol": "👻",
         "levels": [
-            { "speed": 75, "health": 10, "reward": 30, "cost": 120, "isFlying": false, "stealth": true, "immuneToNormal": false, "damageToPlayer": 3 }
+            { "speed": 75, "health": 50, "reward": 30, "cost": 120, "isFlying": false, "stealth": true, "immuneToNormal": false, "damageToPlayer": 3 }
         ]
     },
     "battering_ram": {
         "symbol": "🪵",
         "levels": [
-            { "speed": 8, "health": 1200, "reward": 50, "cost": 200, "isFlying": false, "stealth": false, "immuneToNormal": false, "damageToPlayer": 5 }
+            { "speed": 8, "health": 6000, "reward": 50, "cost": 200, "isFlying": false, "stealth": false, "immuneToNormal": false, "damageToPlayer": 5 }
         ]
     },
     "hydrogen_balloon": {
         "symbol": "🎈",
         "levels": [
-            { "speed": 50, "health": 250, "reward": 40, "cost": 150, "isFlying": true, "stealth": false, "immuneToNormal": false, "damageToPlayer": 3 }
+            { "speed": 50, "health": 1250, "reward": 40, "cost": 150, "isFlying": true, "stealth": false, "immuneToNormal": false, "damageToPlayer": 3 }
         ]
     },
     "specialist": {
         "symbol": "🕵️",
         "levels": [
-            { "speed": 20, "health": 500, "reward": 60, "cost": 250, "isFlying": false, "stealth": false, "immuneToNormal": true, "damageToPlayer": 4 }
+            { "speed": 20, "health": 2500, "reward": 60, "cost": 250, "isFlying": false, "stealth": false, "immuneToNormal": true, "damageToPlayer": 4 }
         ]
     },
     "nokfit_berserker": {
         "symbol": "👹",
         "levels": [
-            { "speed": 35, "health": 700, "reward": 100, "cost": 400, "isFlying": false, "stealth": false, "immuneToNormal": false, "damageToPlayer": 10 }
+            { "speed": 35, "health": 3500, "reward": 100, "cost": 400, "isFlying": false, "stealth": false, "immuneToNormal": false, "damageToPlayer": 10 }
         ]
     }
 }

@@ -1,118 +1,55 @@
 # 🏰 Tower Wars - Echoes of Evolution
 
-Este projeto é um jogo de estratégia **Tower Defense Competitivo (1v1)** desenvolvido em HTML5 Canvas e JavaScript. O jogador compete contra um "Ghost" (uma gravação de uma partida anterior) em tempo real, tentando defender a sua base enquanto envia monstros para atacar a base do oponente.
+Este projeto é um jogo de estratégia **Tower Defense Competitivo (1v1)** desenvolvido em HTML5 Canvas e JavaScript. O diferencial reside no seu sistema assíncrono: o jogador compete contra um **"Ghost"** (uma gravação de uma partida anterior de um vencedor real) em tempo real, tentando defender a sua base enquanto envia monstros para atacar a base do oponente.
 
 ## 📋 Visão Geral do Jogo
 
-O objetivo é simples: **Sobreviver com mais vida que o oponente ao fim de 3 rondas.**
+O objetivo é sobreviver com mais vida que o oponente ao fim de 3 rondas intensas.
 
-*   **Estilo:** Mobile-first (Ratio 1:2), Perspetiva 2.5D.
-*   **Oponentes:** Jogador (Verde/Azul) vs Ghost (Vermelho/Roxo).
+*   **Estilo Visual:** Mobile-first (Proporção 1:2). Utiliza um sistema de **2D Paralelo** com suporte a imagens de fundo personalizadas para criar uma sensação de profundidade artística.
+*   **Oponentes:** Jogador (Verde) vs Ghost (Vermelho - descarregado do Firebase).
 *   **Duração:** 3 Rondas de 120 segundos cada.
+*   **Condições de Fim de Ronda:**
+    *   **Tempo esgotado:** A ronda chega ao fim após 120 segundos.
+    *   **Stalemate (Empate Técnico):** Após os primeiros 30 segundos, se não existirem monstros em campo durante 5 segundos, a ronda termina automaticamente para manter a fluidez do jogo.
 
 ## 🎮 Regras e Mecânicas
 
-### 1. Estrutura da Partida
-*   **Rondas:** O jogo desenrola-se em 3 rondas.
-*   **Tempo:** Cada ronda tem um limite de 2 minutos (120s).
-*   **Condição de Vitória:**
-    *   Reduzir a vida do inimigo a 0 (Vitória Imediata).
-    *   Ter mais vida que o inimigo ao final da 3ª ronda.
-*   **Empate Técnico (Stalemate):** Se após 30 segundos de ronda não existirem monstros em campo durante 5 segundos, a ronda termina prematuramente.
+### 🏗️ Defesa (Torres)
+O jogador constrói torres na sua metade do mapa (inferior). As torres têm diferentes tipos de dano e utilidades:
 
-### 2. Economia (Ouro)
-*   **Ouro Inicial:** 500 moedas (reiniciado apenas em *Full Reset*).
-*   **Rendimento Passivo:** O jogador ganha ouro automaticamente ao longo do tempo.
-*   **Recompensas de Abate:** Destruir monstros inimigos concede ouro.
-*   **Bónus de Ronda:** Ao final de cada ronda, ambos os jogadores recebem **+125 de ouro**.
+1.  🏹 **Giant Crossbow**: Unidade básica e equilibrada. Ataca terra e ar.
+2.  💣 **Catapult**: Dano de **Cerco (Siege)**. Causa dano em área e é essencial contra unidades blindadas.
+3.  🔥 **Oil Launcher**: Lança óleo a ferver que aplica **Lentidão** e dano contínuo.
+4.  💨 **Fydust Cannon**: Dispara poeira debilitante. Causa dano de Cerco e enfraquece inimigos.
+5.  🎯 **Steampunk Sniper**: Dano massivo à distância. Possui **True Sight** (vê unidades invisíveis) e dano de Cerco.
+6.  💥 **Sonic Cannon**: Ondas de choque com perfuração múltipla. Possui **True Sight**.
+7.  ⚡️ **Electric Coil**: Especialista antiaéreo com alta cadência de tiro.
 
-### 3. Vida e Dano
-*   **Vida Inicial:** 100 HP.
-*   **Dano Sofrido:** Quando um monstro inimigo chega ao fim do caminho, o jogador perde vida.
-    *   A quantidade de vida perdida depende agora do parâmetro `damage` específico de cada monstro (ver secção de Dados).
+### 👹 Ofensiva (Monstros)
+Ao invés de ondas automáticas, tu escolhes quando e que monstros enviar. Cada monstro enviado aumenta a pressão sobre o Ghost e, se chegar ao fim do caminho, retira vidas ao oponente.
 
-### 4. O Sistema "Ghost" (Multiplayer Assíncrono)
-*   O inimigo não é uma IA tradicional, nem uma sessão de jogo privada. É uma reprodução exata de ações gravadas (Spawn de monstros e Construção de torres).
-*   **Partilha Global:**
-    *   **Não existe autenticação individual.** O jogo utiliza uma base de dados partilhada (Firebase Firestore).
-    *   Quando qualquer jogador (em qualquer dispositivo) vence uma partida, o seu replay é enviado para o servidor global.
-    *   Ao iniciar um jogo, o sistema procura o último Ghost vencedor globalmente disponível.
-    *   Isso cria uma "cadeia evolutiva": se venceres o Ghost atual, tornas-te o novo Ghost que todos os outros jogadores terão de enfrentar.
-*   **Build Phase:** Ações de construção do Ghost que ocorreram *antes* do primeiro monstro ser invocado na ronda original são executadas instantaneamente no início da ronda, simulando uma fase de preparação.
-*   **Carregamento de Oponente:** Ao iniciar um novo jogo, o sistema carrega o Ghost mais recente disponível na base de dados. Se não houver ligação ou dados, utiliza um Ghost local (`ghost.json`) como fallback.
+1.  ⚔️ **Swordsman**: Rápido e barato. Ideal para "spam" inicial.
+2.  🛡️ **Knight**: Muito rápido e robusto. Difícil de parar sem defesas pesadas.
+3.  👻 **Shadder**: **Invisível (Stealth)**. Só pode ser detectado por torres com sentinela (Sniper/Sonic). Aparece com 50% de transparência.
+4.  🪵 **Battering Ram (Ariete)**: Extremamente lento, mas com HP massivo. Causa **5 de dano** à vida do jogador.
+5.  🎈 **Hydrogen Balloon**: Unidade voadora rápida. Ignora torres que apenas atacam o solo.
+6.  🕵️ **Specialist**: **Imunidade**. Ignora dano de torres normais; apenas torres de **Cerco (Siege)** conseguem feri-lo.
+7.  👹 **Nokfit Berserker**: O Boss final. Vida colossal e causa **10 de dano** se atravessar o portal.
 
-## 🛠️ Entidades do Jogo
+## 🛠️ Tecnologias e Backend
 
-### 🛡️ Torres (`towers.json`)
+*   **Motor Gráfico:** Canvas API (2D puro).
+*   **Base de Dados:** **Firebase Firestore**. 
+    *   Sempre que um jogador vence o Ghost atual, a sua sequência de jogadas (ações, timestamps e coordenadas) é gravada na nuvem.
+    *   O próximo jogador que iniciar o jogo irá enfrentar essa nova gravação, criando um ciclo de evolução constante da dificuldade (Echoes of Evolution).
+*   **Sistema de Tradução:** O jogo inclui uma camada de compatibilidade que traduz unidades de versões antigas para o novo tema atual, permitindo enfrentar Ghosts gravados em versões anteriores do projeto.
 
-As torres são a principal defesa. Elas possuem níveis e comportamentos específicos definidos no ficheiro JSON.
+## 🎨 Personalização de Arte
 
-**Parâmetros de Configuração das Torres:**
-Além do dano e alcance básico, o sistema suporta mecânicas avançadas:
-
-*   **`cost`**: Custo em ouro para construir.
-*   **`damage`**: Dano base por tiro.
-*   **`range`**: Alcance da torre (em quadrículas).
-*   **`fireRate`**: Cadência de tiro (tiros por segundo).
-*   **`canAttackFlying`**: Se `true`, atinge unidades voadoras (ex: Morcegos, Dragões).
-*   **`aerialMultiplier`** *(Novo)*: Multiplicador de dano contra unidades voadoras (ex: `2.0` = dobro do dano).
-*   **`shotThrough`** *(Novo)*: Capacidade de perfuração. Define quantos inimigos um único projétil pode atravessar/atingir antes de desaparecer.
-*   **`auraEffect`** *(Novo)*: Tipo de efeito de área aplicado (ex: `"slow"`, `"burn"`).
-*   **`auraValue`** *(Novo)*: Intensidade do efeito da aura (ex: `0.5` para 50% de slow).
-*   **`specialShot`** *(Novo)*: Define o comportamento da aura/efeito:
-    *   `0`: Aura centrada na torre.
-    *   `1`: Efeito aplicado no local de impacto do projétil (Dano de Splash).
-
-**Tipos de Torres:**
-1.  🏹 **Arrow**: Básica, rápida, ataca terra e ar.
-2.  🧙 **Mage**: Dano mágico, aplica queimadura (`burn`).
-3.  💣 **Cannon**: Dano em área (Splash), lento, apenas terra.
-4.  ❄️ **Slow**: Aplica lentidão (`slow`) aos inimigos.
-5.  🎯 **Sniper**: Alcance extremo, dano alto, bónus contra voadores.
-6.  💥 **Splash**: Dano de área moderado com perfuração.
-7.  💰 **Farm**: Estrutura económica (Geração de ouro - *WIP*).
-
-### 👹 Monstros (`monsters.json`)
-
-Os monstros são as unidades ofensivas enviadas contra o oponente.
-
-**Parâmetros de Configuração dos Monstros:**
-*   **`speed`**: Velocidade de movimento.
-*   **`health`**: Pontos de vida.
-*   **`reward`**: Ouro concedido ao oponente se for morto.
-*   **`cost`**: Custo para invocar.
-*   **`isFlying`**: Se `true`, o monstro ignora o caminho terrestre e voa em linha reta ou rota alternativa.
-*   **`damage`** *(Novo)*: Quantidade de vida que retira ao jogador ao chegar à base (ex: Bosses podem tirar 10 vidas, monstros básicos 1).
-
-**Tipos de Monstros:**
-1.  ◉ **Goblin**: Rápido, fraco, barato (Swarm).
-2.  ⊗ **Orc**: Guerreiro equilibrado, resistente.
-3.  🗿 **Golem**: "Tanque" de vida, muito lento.
-4.  🦇 **Morcego**: Unidade voadora rápida (Ignora torres terrestres).
-5.  💀 **Esqueleto**: Atacante à distância (Mechanic WIP).
-6.  🐺 **Lobo**: Muito rápido, ideal para ataques surpresa.
-7.  🐲 **Dragão**: Unidade Boss voadora, vida massiva, alto custo e dano à base.
-
-## 📂 Estrutura de Ficheiros
-
-*   **`index.html`**: Estrutura base da página.
-*   **`style.css`**: Estilos visuais, layout responsivo e configuração do Canvas.
-*   **`game.js`**:
-    *   *Game Loop*: Gere o tempo, física e desenho.
-    *   *Classes*: `Tower`, `Monster`, `Projectile`, `Camera`, `FloatingText`.
-    *   *Gestão de Estado*: Ouro, Vidas, Rondas, Ghost Replay, Integração com Firebase.
-*   **`towers.json`**: Base de dados de atributos das torres.
-*   **`monsters.json`**: Base de dados de atributos dos monstros.
-*   **`ghost.json`**: Ficheiro local de fallback contendo as ações gravadas do Ghost (caso o Firebase falhe ou esteja vazio).
-*   **`.idx/dev.nix`**: Configuração do ambiente de desenvolvimento (Project IDX).
-
-## 🚀 Como Jogar
-
-1.  **Construir**: Selecione torres no menu inferior e clique na grelha para posicionar.
-2.  **Atacar**: Mude para o menu de monstros e clique para enviar unidades contra o Ghost.
-3.  **Gerir**: Equilibre o gasto de ouro entre defesa (Torres) e ataque/economia (Monstros aumentam o income indiretamente ao forçar o inimigo a gastar).
-4.  **Sobreviver**: Impeça que os monstros cheguem ao final do seu caminho.
-5.  **Evoluir**: Vença a partida para que a sua estratégia seja gravada e se torne o "Ghost" a ser batido pelos próximos jogadores!
+O jogo utiliza um sistema de template para o mapa.
+*   O ficheiro `background.png` (1080x2160) define o aspeto visual do mundo.
+*   Podes gerar um guia de desenho usando o utilitário incluído `generator.html` para garantir que o teu caminho artístico coincide com o caminho lógico dos monstros.
 
 ---
-*Documentação atualizada com base na versão mais recente do código (`game.js`) e definições de dados (`json`).*
+Desenvolvido como um desafio de estratégia e lógica em tempo real. 🏰✨

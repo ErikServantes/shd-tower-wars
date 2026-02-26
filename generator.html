@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <canvas id="canvas" width="1080" height="2160" style="border:1px solid #000; width: 300px; height: 600px;"></canvas>
+    <br>
+    <button onclick="download()">Descarregar Template (PNG)</button>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const cols = 15, rows = 30;
+        const cellW = canvas.width / cols;
+        const cellH = canvas.height / rows;
+
+        const pathPoints = [{x: 4, y: 0}, {x: 4, y: 3}, {x: 6, y: 3}, {x: 6, y: 1}, {x: 8, y: 1}, {x: 8, y: 5}, {x: 13, y: 5}, {x: 13, y: 9}, {x: 6, y: 9}, {x: 6, y: 6}, {x: 2, y: 6}, {x: 2, y: 13}, {x: 7, y: 13}, {x: 7, y: 16}, {x: 12, y: 16}, {x: 12, y: 23}, {x: 9, y: 23}, {x: 8, y: 23}, {x: 8, y: 20}, {x: 1, y: 20}, {x: 1, y: 24}, {x: 6, y: 24}, {x: 6, y: 28}, {x: 8, y: 28}, {x: 8, y: 26}, {x: 10, y: 26}, {x: 10, y: 29}];
+
+        function getFullPath(points) {
+            const full = [];
+            for(let i=0; i<points.length-1; i++) {
+                let s = points[i], e = points[i+1];
+                let x = s.x, y = s.y;
+                let dx = Math.sign(e.x - s.x), dy = Math.sign(e.y - s.y);
+                while(x !== e.x || y !== e.y) { full.push({x, y}); if(dx !== 0) x += dx; else y += dy; }
+            }
+            full.push(points[points.length-1]);
+            return full;
+        }
+
+        const fullPath = getFullPath(pathPoints);
+
+        // Desenhar Fundo e Grid
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        for(let r=0; r<rows; r++) {
+            for(let c=0; c<cols; c++) {
+                const isPath = fullPath.some(p => p.x === c && p.y === r);
+                ctx.fillStyle = isPath ? "#2c3e50" : (r < 15 ? "#4d1b1b" : "#1b4d3e");
+                ctx.fillRect(c * cellW, r * cellH, cellW, cellH);
+                ctx.strokeStyle = "rgba(255,255,255,0.1)";
+                ctx.strokeRect(c * cellW, r * cellH, cellW, cellH);
+            }
+        }
+
+        // Linha Guia
+        ctx.beginPath();
+        ctx.strokeStyle = "#3498db";
+        ctx.lineWidth = 10;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        pathPoints.forEach((p, i) => {
+            const x = p.x * cellW + cellW/2;
+            const y = p.y * cellH + cellH/2;
+            if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        function download() {
+            const link = document.createElement('a');
+            link.download = 'background_template.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>
