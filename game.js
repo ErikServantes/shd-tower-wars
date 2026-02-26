@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             this.pathIndex = 0; this.health = c.health; this.maxHealth = c.health;
             this.speed = c.speed; 
             // Custo do monstro / 10 arredondado para baixo
-            this.reward = Math.floor(c.cost / 10); 
+            this.reward = c.reward; 
             this.owner = owner;
             const s = camera.getTileCenter(this.path[0].x, this.path[0].y);
             this.x = s.x; this.y = s.y; this.reachedEnd = false;
