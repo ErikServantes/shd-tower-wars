@@ -106,7 +106,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             this.type = t; this.level = l; this.isFlying = c.isFlying || false;
             this.path = this.isFlying ? (p === playerPath ? playerFlyingPath : ghostFlyingPath) : p;
             this.pathIndex = 0; this.health = c.health; this.maxHealth = c.health;
-            this.speed = c.speed; this.reward = c.reward; this.owner = owner;
+            this.speed = c.speed; 
+            // Custo do monstro / 10 arredondado para baixo
+            this.reward = Math.floor(c.cost / 10); 
+            this.owner = owner;
             const s = camera.getTileCenter(this.path[0].x, this.path[0].y);
             this.x = s.x; this.y = s.y; this.reachedEnd = false;
         }
@@ -316,6 +319,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        // Dá 125 de ouro a cada jogador no final da ronda
+        updatePlayerGold(125);
+        updateGhostGold(125);
+
         // Se não for o fim do jogo, prepara a próxima ronda.
         endGameMessage.textContent = `Round ${currentRound} Complete`;
         endGameOverlay.classList.remove('hidden');
@@ -358,7 +365,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         endGameMessage.textContent = playerIsVictor ? "Vitória Final!" : "Derrota Final!";
         endGameOverlay.classList.remove('hidden');
         replayBtn.classList.remove('hidden'); // Mostra botão de replay
-        saveGhost(playerActions);
+        if (playerIsVictor) {
+            saveGhost(playerActions);
+        }
     }
 
     async function saveGhost(actions){
