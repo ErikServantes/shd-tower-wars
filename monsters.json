@@ -8,7 +8,7 @@
       {
         "level": 1,
         "name": "Goblin",
-        "cost": 25, 
+        "cost": 15, 
         "health": 100,
         "speed": 90,
         "reward": 5, 
@@ -25,7 +25,7 @@
       {
         "level": 1,
         "name": "Orc Grunt",
-        "cost": 50,
+        "cost": 35,
         "health": 300,
         "speed": 60,
         "reward": 10,
@@ -42,7 +42,7 @@
       {
         "level": 1,
         "name": "Golem",
-        "cost": 120,
+        "cost": 80,
         "health": 800,
         "speed": 30,
         "reward": 25,
@@ -59,7 +59,7 @@
       {
         "level": 1,
         "name": "Morcego",
-        "cost": 40,
+        "cost": 65,
         "health": 80,
         "speed": 100,
         "reward": 7,
@@ -76,7 +76,7 @@
       {
         "level": 1,
         "name": "Esqueleto",
-        "cost": 60,
+        "cost": 35,
         "health": 120,
         "speed": 70,
         "reward": 12,
@@ -93,7 +93,7 @@
       {
         "level": 1,
         "name": "Lobo",
-        "cost": 70,
+        "cost": 50,
         "health": 200,
         "speed": 120,
         "reward": 15,
@@ -110,7 +110,7 @@
       {
         "level": 1,
         "name": "Dragão",
-        "cost": 300,
+        "cost": 250,
         "health": 1500,
         "speed": 40,
         "reward": 100,

@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const gridCols = 15, gridRows = 30;
     let playerGold = 500, playerHealth = 100, monsters = [], towers = [], playerActions = [], selectedAction = null, hoveredTower = null, projectiles = [];
     let ghost = null, ghostActions = [], ghostGold = 500, ghostHealth = 100, ghostTowers = [], ghostMonsters = [], nextGhostActionIndex = 0;
+    let floatingTexts = []; // Array para textos flutuantes
     let camera;
 
     // --- Novas Variáveis para Multi-ronda ---
@@ -95,10 +96,53 @@ document.addEventListener('DOMContentLoaded', async () => {
         ctx.fill();
         ctx.stroke();
     }
-    function drawGameScene() { if (!camera) return; drawGrid(); towers.forEach(t => t.draw()); ghostTowers.forEach(t => t.draw()); monsters.forEach(m => m.draw()); ghostMonsters.forEach(m => m.draw()); projectiles.forEach(p => p.draw()); if (hoveredTower) { ctx.beginPath(); ctx.arc(hoveredTower.x, hoveredTower.y, hoveredTower.range, 0, 2 * Math.PI); ctx.fillStyle = "rgba(255, 255, 255, 0.2)"; ctx.fill(); } if (selectedAction && selectedAction.type === 'tower' && selectedAction.ghostTower.visible) { const { x, y, rangeInPixels, isValid } = selectedAction.ghostTower; ctx.beginPath(); ctx.arc(x, y, 10, 0, 2 * Math.PI); ctx.fillStyle = isValid ? "rgba(0, 100, 255, 0.5)" : "rgba(255, 0, 0, 0.5)"; ctx.fill(); ctx.beginPath(); ctx.arc(x, y, rangeInPixels, 0, 2 * Math.PI); ctx.fillStyle = isValid ? "rgba(0, 100, 255, 0.2)" : "rgba(255, 0, 0, 0.2)"; ctx.fill(); } }
+    function drawGameScene() { 
+        if (!camera) return; 
+        drawGrid(); 
+        towers.forEach(t => t.draw()); 
+        ghostTowers.forEach(t => t.draw()); 
+        monsters.forEach(m => m.draw()); 
+        ghostMonsters.forEach(m => m.draw()); 
+        projectiles.forEach(p => p.draw());
+        floatingTexts.forEach(ft => ft.draw()); // Desenha textos flutuantes 
+        if (hoveredTower) { ctx.beginPath(); ctx.arc(hoveredTower.x, hoveredTower.y, hoveredTower.range, 0, 2 * Math.PI); ctx.fillStyle = "rgba(255, 255, 255, 0.2)"; ctx.fill(); } 
+        if (selectedAction && selectedAction.type === 'tower' && selectedAction.ghostTower.visible) { const { x, y, rangeInPixels, isValid } = selectedAction.ghostTower; ctx.beginPath(); ctx.arc(x, y, 10, 0, 2 * Math.PI); ctx.fillStyle = isValid ? "rgba(0, 100, 255, 0.5)" : "rgba(255, 0, 0, 0.5)"; ctx.fill(); ctx.beginPath(); ctx.arc(x, y, rangeInPixels, 0, 2 * Math.PI); ctx.fillStyle = isValid ? "rgba(0, 100, 255, 0.2)" : "rgba(255, 0, 0, 0.2)"; ctx.fill(); } 
+    }
     function resize(){ canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; drawGameScene(); }
 
     // --- Classes do Jogo ---
+    class FloatingText {
+        constructor(x, y, text, color) {
+            this.x = x;
+            this.y = y;
+            this.text = text;
+            this.color = color;
+            this.life = 1.0; 
+            this.maxLife = 1.0;
+            this.velocity = -20;
+        }
+        update(dt) {
+            this.life -= dt;
+            this.y += this.velocity * dt;
+        }
+        draw() {
+            let opacity = 1;
+            if (this.life > 0.8) {
+                opacity = (1 - this.life) / 0.2; // Fade in
+            } else if (this.life < 0.3) {
+                opacity = this.life / 0.3; // Fade out
+            }
+            
+            ctx.globalAlpha = opacity;
+            ctx.fillStyle = this.color;
+            ctx.font = "bold 20px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(this.text, this.x, this.y);
+            ctx.globalAlpha = 1.0;
+            ctx.textAlign = "start";
+        }
+    }
+
     class Projectile{constructor(x,y,target,damage,owner){this.x=x,this.y=y,this.target=target,this.damage=damage,this.owner=owner,this.speed=400}move(dT){if(!this.target||this.target.health<=0)return;const dX=this.target.x-this.x,dY=this.target.y-this.y,dist=Math.sqrt(dX*dX+dY*dY),moveDist=this.speed*dT;if(dist<moveDist){this.x=this.target.x,this.y=this.target.y}else{this.x+=dX/dist*moveDist,this.y+=dY/dist*moveDist}}draw(){ctx.fillStyle="yellow",ctx.beginPath(),ctx.arc(this.x,this.y,3,0,2*Math.PI),ctx.fill()}}
     class Monster {
         constructor(t, l, p, owner) {
@@ -284,7 +328,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const dX = p.target.x - p.x, dY = p.target.y - p.y;
                 if (Math.sqrt(dX * dX + dY * dY) < 5) {
                     p.target.health -= p.damage;
-                    if (p.target.health <= 0) { if (p.owner === 'player') updatePlayerGold(p.target.reward); else updateGhostGold(p.target.reward); }
+                    if (p.target.health <= 0) { 
+                        if (p.owner === 'player') {
+                            updatePlayerGold(p.target.reward);
+                            floatingTexts.push(new FloatingText(p.target.x, p.target.y, `+${p.target.reward}`, '#f1c40f')); // Gold
+                        } else {
+                            updateGhostGold(p.target.reward);
+                            floatingTexts.push(new FloatingText(p.target.x, p.target.y, `+${p.target.reward}`, '#bdc3c7')); // Silver
+                        }
+                    }
                     projectiles.splice(i, 1);
                 }
             }
@@ -294,6 +346,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (gLeaked.length > 0) updatePlayerHealth(-10 * gLeaked.length);
             monsters = monsters.filter(m => m.health > 0 && !m.reachedEnd);
             ghostMonsters = ghostMonsters.filter(m => m.health > 0 && !m.reachedEnd);
+
+            // Update Floating Texts
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                const ft = floatingTexts[i];
+                ft.update(dT);
+                if (ft.life <= 0) {
+                    floatingTexts.splice(i, 1);
+                }
+            }
+
         } else if (!gameStarted) {
             timerDisplaySpan.textContent = formatTime(ROUND_DURATION);
         }
@@ -424,6 +486,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         selectedAction = null; hoveredTower = null;
         nextGhostActionIndex = 0;
         timeWithoutMonsters = 0;
+        floatingTexts = []; // Limpa textos flutuantes
         
         showActionButtons('towers');
         log("Round state has been reset (keeping towers and gold).");

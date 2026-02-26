@@ -2,7 +2,7 @@
     "arrow": {
         "symbol": "🏹",
         "levels": [
-            { "cost": 100, "damage": 20, "range": 3, "fireRate": 2, "canAttackGround": true, "canAttackFlying": true }
+            { "cost": 75, "damage": 20, "range": 3, "fireRate": 2, "canAttackGround": true, "canAttackFlying": true }
         ]
     },
     "mage": {
@@ -14,7 +14,7 @@
     "cannon": {
         "symbol": "💣",
         "levels": [
-            { "cost": 250, "damage": 50, "range": 2.5, "fireRate": 0.5, "canAttackGround": true, "canAttackFlying": false }
+            { "cost": 200, "damage": 50, "range": 2.5, "fireRate": 0.5, "canAttackGround": true, "canAttackFlying": false }
         ]
     },
     "slow": {
@@ -26,13 +26,13 @@
     "sniper": {
         "symbol": "🎯",
         "levels": [
-            { "cost": 300, "damage": 100, "range": 6, "fireRate": 0.5, "canAttackGround": true, "canAttackFlying": false }
+            { "cost": 250, "damage": 100, "range": 6, "fireRate": 0.5, "canAttackGround": true, "canAttackFlying": false }
         ]
     },
     "splash": {
         "symbol": "💥",
         "levels": [
-            { "cost": 200, "damage": 40, "range": 2, "fireRate": 1, "canAttackGround": true, "canAttackFlying": false }
+            { "cost": 135, "damage": 40, "range": 2, "fireRate": 1, "canAttackGround": true, "canAttackFlying": false }
         ]
     },
     "farm": {
