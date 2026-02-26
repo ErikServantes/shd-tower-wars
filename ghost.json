@@ -2,35 +2,40 @@
   "actions": [
     {
       "action": "spawn",
-      "type": "goblin",
+      "type": "swordsman",
       "level": 1,
-      "timestamp": 1.5
+      "timestamp": 1.5,
+      "round": 1
     },
     {
       "action": "spawn",
-      "type": "orc",
+      "type": "knight",
       "level": 1,
-      "timestamp": 5.0
+      "timestamp": 5.0,
+      "round": 1
     },
     {
       "action": "build",
-      "type": "cannon",
+      "type": "catapult",
       "level": 1,
       "col": 5,
       "row": 5,
-      "timestamp": 8.0
+      "timestamp": 8.0,
+      "round": 1
     },
     {
       "action": "spawn",
-      "type": "goblin",
+      "type": "swordsman",
       "level": 1,
-      "timestamp": 10.0
+      "timestamp": 10.0,
+      "round": 1
     },
     {
       "action": "spawn",
-      "type": "bat",
+      "type": "hydrogen_balloon",
       "level": 1,
-      "timestamp": 12.5
+      "timestamp": 12.5,
+      "round": 1
     }
   ]
 }

@@ -26,6 +26,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // --- Tradutor de Unidades (Compatibilidade com Ghosts Antigos) ---
+    const unitTranslation = {
+        // Monstros
+        "goblin": "swordsman",
+        "orc": "knight",
+        "golem": "battering_ram",
+        "bat": "hydrogen_balloon",
+        "skeleton": "specialist",
+        "wolf": "knight",
+        "dragon": "nokfit_berserker",
+        // Torres
+        "arrow": "giant_crossbow",
+        "mage": "oil_launcher",
+        "cannon": "catapult",
+        "slow": "oil_launcher",
+        "sniper": "steampunk_sniper",
+        "splash": "sonic_cannon",
+        "farm": "farm"
+    };
+
+    function translateUnit(name) {
+        return unitTranslation[name] || name;
+    }
+
     // --- Variáveis de Estado do Jogo ---
     const gridCols = 15, gridRows = 30;
     let playerGold = 500, playerHealth = 100, monsters = [], towers = [], playerActions = [], selectedAction = null, hoveredTower = null, projectiles = [];
@@ -143,15 +167,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    class Projectile{constructor(x,y,target,damage,owner){this.x=x,this.y=y,this.target=target,this.damage=damage,this.owner=owner,this.speed=400}move(dT){if(!this.target||this.target.health<=0)return;const dX=this.target.x-this.x,dY=this.target.y-this.y,dist=Math.sqrt(dX*dX+dY*dY),moveDist=this.speed*dT;if(dist<moveDist){this.x=this.target.x,this.y=this.target.y}else{this.x+=dX/dist*moveDist,this.y+=dY/dist*moveDist}}draw(){ctx.fillStyle="yellow",ctx.beginPath(),ctx.arc(this.x,this.y,3,0,2*Math.PI),ctx.fill()}}
+    class Projectile{
+        constructor(x,y,target,damage,owner,damageType){
+            this.x=x,this.y=y,this.target=target,this.damage=damage,this.owner=owner,this.speed=400,this.damageType=damageType||'normal'
+        }
+        move(dT){
+            if(!this.target||this.target.health<=0)return;
+            const dX=this.target.x-this.x,dY=this.target.y-this.y,dist=Math.sqrt(dX*dX+dY*dY),moveDist=this.speed*dT;
+            if(dist<moveDist){this.x=this.target.x,this.y=this.target.y}
+            else{this.x+=dX/dist*moveDist,this.y+=dY/dist*moveDist}
+        }
+        draw(){ctx.fillStyle="yellow",ctx.beginPath(),ctx.arc(this.x,this.y,3,0,2*Math.PI),ctx.fill()}
+    }
     class Monster {
         constructor(t, l, p, owner) {
-            const c = monsterData[t].levels[l - 1];
-            this.type = t; this.level = l; this.isFlying = c.isFlying || false;
+            // Tradução de tipo para compatibilidade
+            const translatedType = translateUnit(t);
+            const c = monsterData[translatedType].levels[l - 1];
+            
+            this.type = translatedType; this.level = l; 
+            this.isFlying = c.isFlying || false;
+            this.stealth = c.stealth || false;
+            this.immuneToNormal = c.immuneToNormal || false;
+            this.damageToPlayer = c.damageToPlayer || 1;
+
             this.path = this.isFlying ? (p === playerPath ? playerFlyingPath : ghostFlyingPath) : p;
             this.pathIndex = 0; this.health = c.health; this.maxHealth = c.health;
             this.speed = c.speed; 
-            // Custo do monstro / 10 arredondado para baixo
             this.reward = c.reward; 
             this.owner = owner;
             const s = camera.getTileCenter(this.path[0].x, this.path[0].y);
@@ -169,31 +211,42 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         draw() {
+            if (this.stealth) ctx.globalAlpha = 0.5;
             ctx.fillStyle = this.owner === 'player' ? '#2ecc71' : '#e74c3c'; ctx.beginPath(); ctx.arc(this.x, this.y, 10, 0, 2 * Math.PI); ctx.fill();
             if (this.isFlying) { ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke(); }
             if (this.health < this.maxHealth) { const p = this.y - 20, w = 30, h = 5; ctx.fillStyle = "#444"; ctx.fillRect(this.x - w / 2, p, w, h); ctx.fillStyle = "#0f0"; ctx.fillRect(this.x - w / 2, p, w * (this.health / this.maxHealth), h) }
+            ctx.globalAlpha = 1.0;
         }
     }
     class Tower {
         constructor(t, l, c, r, owner) {
-            const d = towerData[t].levels[l - 1];
-            this.type = t; this.level = l; this.col = c; this.row = r; this.damage = d.damage;
+            // Tradução de tipo para compatibilidade
+            const translatedType = translateUnit(t);
+            const d = towerData[translatedType].levels[l - 1];
+            
+            this.type = translatedType; this.level = l; this.col = c; this.row = r; this.damage = d.damage;
+            this.damageType = towerData[translatedType].damageType || 'normal';
+            this.canSeeStealth = towerData[translatedType].canSeeStealth || false;
             this.canAttackFlying = d.canAttackFlying || false; this.canAttackGround = d.canAttackGround || false;
             const tileWidthAtTower = camera.project(c, r).tileWidth; this.range = d.range * tileWidthAtTower;
             this.fireRate = d.fireRate; this.cost = d.cost; this.owner = owner;
             const p = camera.getTileCenter(c, r); this.x = p.x; this.y = p.y; this.target = null; this.fireCooldown = 0
         }
         findTarget(monsters) {
-            if (this.target && this.target.health > 0 && Math.sqrt(Math.pow(this.x - this.target.x, 2) + Math.pow(this.y - this.target.y, 2)) <= this.range) return;
+            if (this.target && this.target.health > 0 && Math.sqrt(Math.pow(this.x - this.target.x, 2) + Math.pow(this.y - this.target.y, 2)) <= this.range) {
+                if (this.target.stealth && !this.canSeeStealth) { /* lost sight */ }
+                else return;
+            }
             this.target = null; let closestTarget = null, minDistance = Infinity;
             for (const monster of monsters) {
                 if ((monster.isFlying && !this.canAttackFlying) || (!monster.isFlying && !this.canAttackGround)) continue;
+                if (monster.stealth && !this.canSeeStealth) continue;
                 const distance = Math.sqrt(Math.pow(this.x - monster.x, 2) + Math.pow(this.y - monster.y, 2));
                 if (distance <= this.range && distance < minDistance) { minDistance = distance; closestTarget = monster; }
             }
             this.target = closestTarget;
         }
-        attack(dT) { if (!this.target) return; this.fireCooldown -= dT; if (this.fireCooldown <= 0) { projectiles.push(new Projectile(this.x, this.y, this.target, this.damage, this.owner)); this.fireCooldown = 1 / this.fireRate } }
+        attack(dT) { if (!this.target) return; this.fireCooldown -= dT; if (this.fireCooldown <= 0) { projectiles.push(new Projectile(this.x, this.y, this.target, this.damage, this.owner, this.damageType)); this.fireCooldown = 1 / this.fireRate } }
         draw() { const p = camera.getTileCenter(this.col, this.row); ctx.fillStyle = this.owner === 'player' ? '#3498db' : '#9b59b6'; ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, 2 * Math.PI); ctx.fill() }
     }
 
@@ -254,12 +307,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function spawnGhostMonster(unitType, level) {
-        if (!monsterData[unitType]) { console.warn(`GHOST: Monstro desconhecido '${unitType}' ignorado.`); return; }
-        const config = monsterData[unitType].levels[level-1]; if(ghostGold >= config.cost){ updateGhostGold(-config.cost); ghostMonsters.push(new Monster(unitType, level, ghostPath, 'ghost')); } 
+        // Tradução manual aqui para segurança do spawn
+        const realType = translateUnit(unitType);
+        if (!monsterData[realType]) { console.warn(`GHOST: Monstro desconhecido '${realType}' ignorado.`); return; }
+        const config = monsterData[realType].levels[level-1]; if(ghostGold >= config.cost){ updateGhostGold(-config.cost); ghostMonsters.push(new Monster(realType, level, ghostPath, 'ghost')); } 
     }
     function buildGhostTower(unitType, level, col, row) {
-        if (!towerData[unitType]) { console.warn(`GHOST: Torre desconhecida '${unitType}' ignorada.`); return; }
-        const config = towerData[unitType].levels[level-1]; if(ghostGold >= config.cost){ updateGhostGold(-config.cost); ghostTowers.push(new Tower(unitType,level,col,row,'ghost')); } 
+        // Tradução manual aqui para segurança da build
+        const realType = translateUnit(unitType);
+        if (!towerData[realType]) { console.warn(`GHOST: Torre desconhecida '${realType}' ignorada.`); return; }
+        const config = towerData[realType].levels[level-1]; if(ghostGold >= config.cost){ updateGhostGold(-config.cost); ghostTowers.push(new Tower(realType,level,col,row,'ghost')); } 
     }
     
     // --- UI e Botões ---
@@ -327,7 +384,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 p.move(dT);
                 const dX = p.target.x - p.x, dY = p.target.y - p.y;
                 if (Math.sqrt(dX * dX + dY * dY) < 5) {
-                    p.target.health -= p.damage;
+                    let damage = p.damage;
+                    if (p.target.immuneToNormal && p.damageType !== 'siege') damage = 0;
+
+                    p.target.health -= damage;
                     if (p.target.health <= 0) { 
                         if (p.owner === 'player') {
                             updatePlayerGold(p.target.reward);
@@ -342,8 +402,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             // Verifica monstros que chegaram ao fim
             const pLeaked = monsters.filter(m => m.reachedEnd), gLeaked = ghostMonsters.filter(m => m.reachedEnd);
-            if (pLeaked.length > 0) updateGhostHealth(-10 * pLeaked.length);
-            if (gLeaked.length > 0) updatePlayerHealth(-10 * gLeaked.length);
+            pLeaked.forEach(m => updateGhostHealth(-m.damageToPlayer));
+            gLeaked.forEach(m => updatePlayerHealth(-m.damageToPlayer));
+
             monsters = monsters.filter(m => m.health > 0 && !m.reachedEnd);
             ghostMonsters = ghostMonsters.filter(m => m.health > 0 && !m.reachedEnd);
 

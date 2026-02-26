@@ -1,10 +1,17 @@
 {
-    "arrow": {
+    "giant_crossbow": {
         "symbol": "🏹",
+        "damageType": "normal",
+        "canSeeStealth": false,
         "levels": [
-            { 
-                "cost": 75, "damage": 20, "range": 3, "fireRate": 2, "canAttackGround": true, "canAttackFlying": true,
-                "aerialMultiplier": 1.0,
+            {
+                "cost": 75,
+                "damage": 20,
+                "range": 3,
+                "fireRate": 2,
+                "canAttackGround": true,
+                "canAttackFlying": true,
+                "aerialMultiplier": 0.5,
                 "shotThrough": 1,
                 "auraEffect": "none",
                 "auraValue": 0,
@@ -12,38 +19,39 @@
             }
         ]
     },
-    "mage": {
-        "symbol": "🧙",
-        "levels": [
-            { 
-                "cost": 120, "damage": 25, "range": 3.5, "fireRate": 1.5, "canAttackGround": true, "canAttackFlying": false,
-                "aerialMultiplier": 1.0,
-                "shotThrough": 1,
-                "auraEffect": "burn",
-                "auraValue": 5,
-                "specialShot": 0
-            }
-        ]
-    },
-    "cannon": {
+    "catapult": {
         "symbol": "💣",
+        "damageType": "siege",
+        "canSeeStealth": false,
         "levels": [
-            { 
-                "cost": 200, "damage": 50, "range": 2.5, "fireRate": 0.5, "canAttackGround": true, "canAttackFlying": false,
+            {
+                "cost": 200,
+                "damage": 50,
+                "range": 2.5,
+                "fireRate": 0.5,
+                "canAttackGround": true,
+                "canAttackFlying": false,
                 "aerialMultiplier": 0.5,
                 "shotThrough": 5,
                 "auraEffect": "none",
                 "auraValue": 0,
-                "specialShot": 1
+                "specialShot": 0
             }
         ]
     },
-    "slow": {
-        "symbol": "❄️",
+    "oil_launcher": {
+        "symbol": "🔥",
+        "damageType": "normal",
+        "canSeeStealth": false,
         "levels": [
-            { 
-                "cost": 150, "damage": 5, "range": 4, "fireRate": 1, "canAttackGround": true, "canAttackFlying": false,
-                "aerialMultiplier": 1.0,
+            {
+                "cost": 150,
+                "damage": 15,
+                "range": 3.5,
+                "fireRate": 1.5,
+                "canAttackGround": true,
+                "canAttackFlying": false,
+                "aerialMultiplier": 1,
                 "shotThrough": 1,
                 "auraEffect": "slow",
                 "auraValue": 0.5,
@@ -51,12 +59,39 @@
             }
         ]
     },
-    "sniper": {
-        "symbol": "🎯",
+    "fydust_cannon": {
+        "symbol": "💨",
+        "damageType": "siege",
+        "canSeeStealth": false,
         "levels": [
-            { 
-                "cost": 250, "damage": 100, "range": 6, "fireRate": 0.5, "canAttackGround": true, "canAttackFlying": false,
-                "aerialMultiplier": 2.0,
+            {
+                "cost": 220,
+                "damage": 40,
+                "range": 3,
+                "fireRate": 1,
+                "canAttackGround": true,
+                "canAttackFlying": false,
+                "aerialMultiplier": 1,
+                "shotThrough": 3,
+                "auraEffect": "weaken",
+                "auraValue": 0.2,
+                "specialShot": 1
+            }
+        ]
+    },
+    "steampunk_sniper": {
+        "symbol": "🎯",
+        "damageType": "siege",
+        "canSeeStealth": true,
+        "levels": [
+            {
+                "cost": 250,
+                "damage": 100,
+                "range": 6,
+                "fireRate": 0.5,
+                "canAttackGround": true,
+                "canAttackFlying": true,
+                "aerialMultiplier": 1,
                 "shotThrough": 3,
                 "auraEffect": "none",
                 "auraValue": 0,
@@ -64,24 +99,58 @@
             }
         ]
     },
-    "splash": {
+    "sonic_cannon": {
         "symbol": "💥",
+        "damageType": "normal",
+        "canSeeStealth": true,
         "levels": [
-            { 
-                "cost": 135, "damage": 40, "range": 2, "fireRate": 1, "canAttackGround": true, "canAttackFlying": false,
-                "aerialMultiplier": 1.0,
+            {
+                "cost": 300,
+                "damage": 60,
+                "range": 4,
+                "fireRate": 1,
+                "canAttackGround": true,
+                "canAttackFlying": false,
+                "aerialMultiplier": 1,
+                "shotThrough": 10,
+                "auraEffect": "none",
+                "auraValue": 0,
+                "specialShot": 2
+            }
+        ]
+    },
+    "electric_coil": {
+        "symbol": "⚡️",
+        "damageType": "normal",
+        "canSeeStealth": false,
+        "levels": [
+            {
+                "cost": 180,
+                "damage": 30,
+                "range": 4,
+                "fireRate": 2,
+                "canAttackGround": false,
+                "canAttackFlying": true,
+                "aerialMultiplier": 1,
                 "shotThrough": 3,
                 "auraEffect": "none",
                 "auraValue": 0,
-                "specialShot": 1
+                "specialShot": 3
             }
         ]
     },
     "farm": {
         "symbol": "💰",
+        "damageType": "normal",
+        "canSeeStealth": false,
         "levels": [
-            { 
-                "cost": 50, "damage": 0, "range": 0, "fireRate": 0, "canAttackGround": false, "canAttackFlying": false,
+            {
+                "cost": 50,
+                "damage": 0,
+                "range": 0,
+                "fireRate": 0,
+                "canAttackGround": false,
+                "canAttackFlying": false,
                 "aerialMultiplier": 0,
                 "shotThrough": 0,
                 "auraEffect": "none",

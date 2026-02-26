@@ -1,129 +1,44 @@
-
 {
-  "goblin": {
-    "name": "Goblin Básico",
-    "symbol": "◉",
-    "description": "Rápido mas frágil. Ideal para sobrecarregar defesas iniciais.",
-    "levels": [
-      {
-        "level": 1,
-        "name": "Goblin",
-        "cost": 15, 
-        "health": 100,
-        "speed": 90,
-        "reward": 5, 
-        "asset": "assets/monsters/goblin_1.png",
-        "isFlying": false,
-        "damage": 1
-      }
-    ]
-  },
-  "orc": {
-    "name": "Orc Guerreiro",
-    "symbol": "⊗",
-    "description": "Lento mas resistente, capaz de absorver muito dano.",
-    "levels": [
-      {
-        "level": 1,
-        "name": "Orc Grunt",
-        "cost": 35,
-        "health": 300,
-        "speed": 60,
-        "reward": 10,
-        "asset": "assets/monsters/orc_1.png",
-        "isFlying": false,
-        "damage": 2
-      }
-    ]
-  },
-  "golem": {
-    "name": "Golem de Pedra",
-    "symbol": "🗿",
-    "description": "Extremamente lento e resistente, quase uma muralha ambulante.",
-    "levels": [
-      {
-        "level": 1,
-        "name": "Golem",
-        "cost": 80,
-        "health": 800,
-        "speed": 30,
-        "reward": 25,
-        "asset": "assets/monsters/golem_1.png",
-        "isFlying": false,
-        "damage": 5
-      }
-    ]
-  },
-  "bat": {
-    "name": "Morcego Vampiro",
-    "symbol": "🦇",
-    "description": "Ignora o caminho terrestre (voador) mas tem pouca vida.",
-    "levels": [
-      {
-        "level": 1,
-        "name": "Morcego",
-        "cost": 65,
-        "health": 80,
-        "speed": 100,
-        "reward": 7,
-        "asset": "assets/monsters/bat_1.png",
-        "isFlying": true,
-        "damage": 1
-      }
-    ]
-  },
-  "skeleton": {
-    "name": "Esqueleto Arqueiro",
-    "symbol": "💀",
-    "description": "Ataca as tuas torres à distância em vez de seguir o caminho.",
-    "levels": [
-      {
-        "level": 1,
-        "name": "Esqueleto",
-        "cost": 35,
-        "health": 120,
-        "speed": 70,
-        "reward": 12,
-        "asset": "assets/monsters/skeleton_1.png",
-        "isFlying": false,
-        "damage": 2
-      }
-    ]
-  },
-  "wolf": {
-    "name": "Lobo Veloz",
-    "symbol": "🐺",
-    "description": "Muito rápido e com vida moderada, bom para ataques surpresa.",
-    "levels": [
-      {
-        "level": 1,
-        "name": "Lobo",
-        "cost": 50,
-        "health": 200,
-        "speed": 120,
-        "reward": 15,
-        "asset": "assets/monsters/wolf_1.png",
-        "isFlying": false,
-        "damage": 2
-      }
-    ]
-  },
-  "dragon": {
-    "name": "Dragão Bebé",
-    "symbol": "🐲",
-    "description": "Unidade de elite. Cara, lenta, mas com muita vida e recompensa.",
-    "levels": [
-      {
-        "level": 1,
-        "name": "Dragão",
-        "cost": 250,
-        "health": 1500,
-        "speed": 40,
-        "reward": 100,
-        "asset": "assets/monsters/dragon_1.png",
-        "isFlying": true,
-        "damage": 10
-      }
-    ]
-  }
+    "swordsman": {
+        "symbol": "⚔️",
+        "levels": [
+            { "speed": 50, "health": 50, "reward": 5, "cost": 15, "isFlying": false, "stealth": false, "immuneToNormal": false, "damageToPlayer": 1 }
+        ]
+    },
+    "knight": {
+        "symbol": "🛡️",
+        "levels": [
+            { "speed": 100, "health": 350, "reward": 20, "cost": 80, "isFlying": false, "stealth": false, "immuneToNormal": false, "damageToPlayer": 2 }
+        ]
+    },
+    "shadder": {
+        "symbol": "👻",
+        "levels": [
+            { "speed": 75, "health": 10, "reward": 30, "cost": 120, "isFlying": false, "stealth": true, "immuneToNormal": false, "damageToPlayer": 3 }
+        ]
+    },
+    "battering_ram": {
+        "symbol": "🪵",
+        "levels": [
+            { "speed": 8, "health": 1200, "reward": 50, "cost": 200, "isFlying": false, "stealth": false, "immuneToNormal": false, "damageToPlayer": 5 }
+        ]
+    },
+    "hydrogen_balloon": {
+        "symbol": "🎈",
+        "levels": [
+            { "speed": 50, "health": 250, "reward": 40, "cost": 150, "isFlying": true, "stealth": false, "immuneToNormal": false, "damageToPlayer": 3 }
+        ]
+    },
+    "specialist": {
+        "symbol": "🕵️",
+        "levels": [
+            { "speed": 20, "health": 500, "reward": 60, "cost": 250, "isFlying": false, "stealth": false, "immuneToNormal": true, "damageToPlayer": 4 }
+        ]
+    },
+    "nokfit_berserker": {
+        "symbol": "👹",
+        "levels": [
+            { "speed": 35, "health": 700, "reward": 100, "cost": 400, "isFlying": false, "stealth": false, "immuneToNormal": false, "damageToPlayer": 10 }
+        ]
+    }
 }
