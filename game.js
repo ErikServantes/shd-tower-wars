@@ -1,4 +1,4 @@
-// ============== Echoes of Evolution - Core Logic (v2.7) ==============
+// ============== Echoes of Evolution - Core Logic (v2.8) ==============
 
 document.addEventListener('DOMContentLoaded', async () => {
     const canvas = document.getElementById('gameCanvas');
@@ -62,12 +62,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ghostFlyingPath = [{ x: 4, y: 0 }, { x: 10, y: 29 }];
     const playerFlyingPath = [...ghostFlyingPath].reverse();
 
-    // 8. Funções do Loop e Renderização (com Grelha Ténue)
+    // 8. Funções do Loop e Renderização (com Grelha Mais Ténue)
     function drawGrid() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Desenha a grelha com 30% de opacidade
-        ctx.globalAlpha = 0.3;
+        // Desenha a grelha com 10% de opacidade
+        ctx.globalAlpha = 0.1;
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 1;
 
