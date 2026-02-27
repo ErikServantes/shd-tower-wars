@@ -1,4 +1,4 @@
-/* Ficheiro CSS para Echoes of Evolution - v2.0 */
+/* Ficheiro CSS para Echoes of Evolution - v2.6 (Solução Final) */
 
 /* --- Configuração Geral --- */
 html, body {
@@ -8,32 +8,32 @@ html, body {
     font-family: sans-serif; touch-action: none;
 }
 
-/* --- Contentor Principal da App --- */
+/* --- Contentor Principal (Estrutura de Coluna) --- */
 #app-container {
     position: relative;
     display: flex;
-    flex-direction: column;
-    aspect-ratio: 1 / 2; /* A fonte da distorção vertical */
+    flex-direction: column; /* Organiza os filhos verticalmente */
+    aspect-ratio: 1 / 2;
     height: 100%;
     max-height: 100vh;
+    background-color: #1c1c1c;
     box-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
+
+/* --- Área de Jogo (Ocupa o espaço sobrante) --- */
+#game-area {
+    flex-grow: 1; /* Essencial: faz esta div esticar */
+    position: relative; 
+    min-height: 0; /* Previne problemas de overflow com flexbox */
     
-    /* CORREÇÃO FINAL: O fundo é aplicado aqui para sofrer a mesma distorção que o resto */
+    /* A imagem de fundo é aplicada AQUI */
     background-image: linear-gradient(rgba(26, 26, 26, 0.7), rgba(26, 26, 26, 0.7)), url('background.png');
-    background-size: 100% 100%; /* Força o esticar para alinhar com o canvas */
+    background-size: 100% 100%; /* Força a distorção para igualar o contentor */
     background-position: center;
     background-repeat: no-repeat;
 }
 
-/* --- Área de Jogo (Transparente) --- */
-#game-area {
-    flex-grow: 1;
-    position: relative;
-    min-height: 0;
-    background-color: transparent; /* A área de jogo agora é transparente */
-}
-
-/* --- Canvas (Transparente) --- */
+/* O Canvas ocupa 100% do seu pai (#game-area) */
 canvas {
     position: absolute;
     top: 0; left: 0;
@@ -42,41 +42,34 @@ canvas {
     background-color: transparent !important;
 }
 
-/* --- HUDs e UI com Transparência --- */
-#top-hud, #player-hud {
+/* --- UI (Sem posicionamento absoluto) --- */
+#top-hud {
+    flex-shrink: 0; /* Impede que a HUD encolha */
     background: rgba(0,0,0,0.5);
     padding: 5px 15px;
     box-sizing: border-box;
     z-index: 10; 
-    flex-shrink: 0; 
     color: white;
 }
 
-.hud-bar {
-    display: flex; align-items: center; gap: 15px;
-    width: 100%;
-    justify-content: space-between;
+#bottom-ui-container {
+    flex-shrink: 0; /* Impede que a UI encolha */
+    z-index: 10;
+    color: white;
 }
 
-.hud-item {
-    display: flex; align-items: center; gap: 8px;
-    font-weight: bold; font-size: 1.1em;
-}
+#player-hud { background: rgba(0,0,0,0.5); padding: 5px 15px; box-sizing: border-box; }
+.hud-bar { display: flex; align-items: center; gap: 15px; width: 100%; justify-content: space-between; }
+.hud-item { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 1.1em; }
+#bottom-action-bar { width: 100%; height: 75px; display: flex; justify-content: center; align-items: center; box-sizing: border-box; background: rgba(0, 0, 0, 0.7); border-top: 1px solid rgba(255, 255, 255, 0.2); }
 
-#bottom-ui-container { flex-shrink: 0; }
-
-#bottom-action-bar {
-    width: 100%; height: 75px; display: flex;
-    justify-content: center; align-items: center; box-sizing: border-box;
-    z-index: 20; background: rgba(0, 0, 0, 0.7);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* O resto dos estilos permanece o mesmo */
-#end-game-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white; text-align: center; }
+/* Ecrã de Fim de Jogo (usa posicionamento absoluto, o que está correto aqui) */
+#end-game-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white; text-align: center; }
 #end-game-message { font-size: 2.5em; font-weight: bold; margin-bottom: 20px; text-shadow: 2px 2px 8px rgba(0,0,0,0.8); }
 #replay-btn { padding: 15px 30px; font-size: 1.5em; font-weight: bold; color: white; background-color: #e67e22; border: 3px solid #f39c12; border-radius: 12px; cursor: pointer; transition: transform 0.2s, background-color 0.2s; }
 #replay-btn:hover { background-color: #d35400; transform: scale(1.05); }
+
+/* Botões (sem alterações) */
 #button-container { height: 100%; width: 100%; display: flex; justify-content: space-around; align-items: center; gap: 5px; padding: 0 5px; box-sizing: border-box; }
 .menu-btn, .action-btn { flex-grow: 1; flex-basis: 0; height: 50px; background-color: #34495e; border: 2px solid #7f8c8d; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 0; line-height: 1; padding: 4px 0; }
 .unit-symbol { font-size: 1.4em; flex-grow: 1; display: flex; align-items: center; justify-content: center; }
