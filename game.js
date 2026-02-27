@@ -1,4 +1,4 @@
-// ============== Echoes of Evolution - Core Logic (Final Clean) ==============
+// ============== Echoes of Evolution - Core Logic (v2.7) ==============
 
 document.addEventListener('DOMContentLoaded', async () => {
     const canvas = document.getElementById('gameCanvas');
@@ -62,9 +62,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ghostFlyingPath = [{ x: 4, y: 0 }, { x: 10, y: 29 }];
     const playerFlyingPath = [...ghostFlyingPath].reverse();
 
-    // 8. Funções do Loop e Renderização (Limpa)
+    // 8. Funções do Loop e Renderização (com Grelha Ténue)
     function drawGrid() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Desenha a grelha com 30% de opacidade
+        ctx.globalAlpha = 0.3;
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 1;
+
+        const tileWidth = canvas.width / 15;
+        const tileHeight = canvas.height / 30;
+
+        for (let i = 1; i < 15; i++) {
+            ctx.beginPath();
+            ctx.moveTo(i * tileWidth, 0);
+            ctx.lineTo(i * tileWidth, canvas.height);
+            ctx.stroke();
+        }
+        for (let i = 1; i < 30; i++) {
+            ctx.beginPath();
+            ctx.moveTo(0, i * tileHeight);
+            ctx.lineTo(canvas.width, i * tileHeight);
+            ctx.stroke();
+        }
+
+        ctx.globalAlpha = 1.0; // Restaura a opacidade
     }
 
     // Resto do ficheiro
@@ -84,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadGhost() { try { const t = await db.collection("ghosts").orderBy("timestamp", "desc").limit(1).get(); if (!t.empty) { ghost = t.docs[0].data(); ghostActions = ghost.actions || []; log("Ghost Firebase carregado."); } else { throw new Error("Vazio"); } } catch (e) { try { const res = await fetch(`ghost.json?v=${Date.now()}`); ghost = await res.json(); ghostActions = ghost.actions || []; log("Ghost Local carregado."); } catch (e2) { ghost = null; ghostActions = []; } } if (ghostActions.length > 0) ghostActions.sort((a, b) => (a.round !== b.round) ? a.round - b.round : a.timestamp - b.timestamp); }
     async function fullReset() { endGameOverlay.classList.add('hidden'); isRoundOver = false; gameStarted = false; if (gameLoopTimestamp) cancelAnimationFrame(gameLoopTimestamp); currentRound = 1; playerHealth = 100; ghostHealth = 100; playerActions = []; updatePlayerHealth(0); updateGhostHealth(0); if (roundNumberSpan) roundNumberSpan.textContent = currentRound; playerGold = 500; ghostGold = 500; updatePlayerGold(0); updateGhostGold(0); towers = []; ghostTowers = []; await loadGhost(); roundGhostActions = ghostActions.filter(a => a.round === currentRound).sort((a, b) => a.timestamp - b.timestamp); nextGhostActionIndex = 0; roundTimer = ROUND_DURATION; monsters = []; projectiles = []; ghostMonsters = []; lastTime = null; gameLoopTimestamp = requestAnimationFrame(gameLoop); }
     
-    // 11. Inicialização (Limpa)
+    // 11. Inicialização
     async function main() {
         camera = new Camera(canvas);
 
