@@ -90,9 +90,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) { log("Erro no carregamento: " + e); }
     }
 
-    const backgroundImage = new Image();
-    backgroundImage.src = 'background.png';
-
     // 6. Classes
     class Camera {
         constructor(canvas) { this.canvas = canvas; }
@@ -148,7 +145,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     const playerFlyingPath = [...ghostFlyingPath].reverse();
 
     // 8. Funções do Loop e Renderização
-    function drawGrid() { ctx.clearRect(0, 0, canvas.width, canvas.height); if (backgroundImage.complete && backgroundImage.naturalWidth !== 0) { ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height); } else { for (let r = 0; r < 30; r++) { for (let c = 0; c < 15; c++) { const p = camera.project(c, r), isP = ghostPath.some(pt => pt.x === c && pt.y === r); ctx.fillStyle = isP ? "#2c3e50" : (r >= 15 ? "#1b4d3e" : "#4d1b1b"); ctx.fillRect(p.x, p.y, p.tileWidth, p.tileHeight); ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.strokeRect(p.x, p.y, p.tileWidth, p.tileHeight); } } ctx.beginPath(); ctx.strokeStyle = "#3498db"; ctx.lineWidth = 4; ghostPathPoints.forEach((pt, i) => { const pos = camera.getTileCenter(pt.x, pt.y); if (i === 0) ctx.moveTo(pos.x, pos.y); else ctx.lineTo(pos.x, pos.y); }); ctx.stroke(); } }
+    function drawGrid() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw a thin yellow line for the path, and nothing else.
+        ctx.beginPath();
+        ctx.strokeStyle = "yellow";
+        ctx.lineWidth = 2; // Thin line
+        ghostPathPoints.forEach((pt, i) => {
+            const pos = camera.getTileCenter(pt.x, pt.y);
+            if (i === 0) ctx.moveTo(pos.x, pos.y);
+            else ctx.lineTo(pos.x, pos.y);
+        });
+        ctx.stroke();
+    }
+
 
     function gameLoop(timestamp) {
         gameLoopTimestamp = requestAnimationFrame(gameLoop); if (lastTime === null) lastTime = timestamp;
@@ -247,8 +258,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 11. Inicialização
     async function main() {
-        camera = new Camera(canvas); await loadGameData(); updateActionButtons();
+        camera = new Camera(canvas);
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
         window.addEventListener("resize", () => { canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; });
+
+        await loadGameData(); 
+        updateActionButtons();
         towerMenuBtn.addEventListener('click', () => showActionButtons('towers'));
         monsterMenuBtn.addEventListener('click', () => showActionButtons('monsters'));
         document.querySelectorAll('.action-btn').forEach(btn => btn.addEventListener('click', () => handleActionButtonClick(btn)));
@@ -256,7 +272,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         canvas.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('keydown', (e) => { if (e.key === "Escape" && selectedAction) { selectedAction.button.classList.remove("selected"); selectedAction = null; } const n = parseInt(e.key); if (!isNaN(n) && n >= 1 && n <= 7) { const ut = Object.keys(monsterData); if (ut[n - 1]) spawnPlayerMonster(ut[n - 1]); } });
         replayBtn.addEventListener('click', fullReset);
-        canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
         await fullReset();
     }
     main();

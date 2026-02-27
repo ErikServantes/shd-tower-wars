@@ -16,8 +16,12 @@ html, body {
     aspect-ratio: 1 / 2; /* Força a proporção de telemóvel */
     height: 100%; /* Ocupa a altura máxima */
     max-height: 100vh;
-    background-color: #1a1a1a; /* Cor de fundo do jogo */
     box-shadow: 0 0 20px rgba(255,255,255,0.2); /* Um brilho subtil */
+    /* Define a imagem de fundo com um overlay escuro para melhor legibilidade do jogo */
+    background-image: linear-gradient(rgba(26, 26, 26, 0.7), rgba(26, 26, 26, 0.7)), url('background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 /* --- Ecrã de Fim de Jogo (Overlay) --- */
@@ -62,6 +66,7 @@ canvas {
     min-height: 0; /* Previne problemas de overflow no flexbox */
     display: block;
     width: 100%;
+    background-color: transparent !important; /* Garante que o canvas é transparente */
 }
 
 /* --- HUD Superior --- */
